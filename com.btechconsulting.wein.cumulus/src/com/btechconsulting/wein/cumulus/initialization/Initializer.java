@@ -1,9 +1,9 @@
 package com.btechconsulting.wein.cumulus.initialization;
 
 
+import java.io.FileInputStream;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.amazonaws.AmazonClientException;
@@ -55,15 +55,18 @@ public enum Initializer {
                     "being able to access the network.");
             System.err.println("Error Message: " + ace.getMessage());
 		}
+		catch (NullPointerException npee){
+			System.err.println("Couldn't find credentials file\n");
+		}
 		catch (Exception e){
-			System.err.println();
+			System.err.println(e);
 		}
 
 	}
 
 	private void createInitialInstances(String credentialsFile) throws Exception {
 		AmazonEC2 ec2= new AmazonEC2Client(new PropertiesCredentials(
-				Initializer.class.getResourceAsStream(credentialsFile)));
+				new FileInputStream(credentialsFile)));
 		//set the zone
 		ec2.setEndpoint(Constants.ec2Region);
 		System.out.println("Intializing "+Constants.initialInstances+" instances\n");
@@ -93,11 +96,44 @@ public enum Initializer {
 	 */
 	private AmazonSQS createQueue(String credentialsFile, String queueName) throws Exception {
 		AmazonSQS sqs = new AmazonSQSClient(new PropertiesCredentials(
-				Initializer.class.getResourceAsStream(credentialsFile)));
+				new FileInputStream(credentialsFile)));
 		// Create a queue
 		System.out.println("Creating a new SQS queue "+queueName+".\n");
 		CreateQueueRequest createQueueRequest = new CreateQueueRequest(queueName);
+		String myQueueUrl = sqs.createQueue(createQueueRequest).getQueueUrl();
+		System.out.println("Created queue at "+myQueueUrl+"\n");
 		return sqs;
 	}
+
+	/**
+	 * @return the unitsOnServer
+	 */
+	public synchronized Map<String, Map<String, wUStatus>> getUnitsOnServer() {
+		return unitsOnServer;
+	}
+
+	/**
+	 * @param unitsOnServer the unitsOnServer to set
+	 */
+	public synchronized void setUnitsOnServer(
+			Map<String, Map<String, wUStatus>> unitsOnServer) {
+		this.unitsOnServer = unitsOnServer;
+	}
+
+	/**
+	 * @return the dispatchQueue
+	 */
+	public AmazonSQS getDispatchQueue() {
+		return dispatchQueue;
+	}
+
+	/**
+	 * @return the returnQueue
+	 */
+	public AmazonSQS getReturnQueue() {
+		return returnQueue;
+	}
+	
+	
 
 }
