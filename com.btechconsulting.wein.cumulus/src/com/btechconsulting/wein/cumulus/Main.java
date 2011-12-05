@@ -14,6 +14,14 @@ public class Main {
 		System.out.println(Initializer.INSTANCE.getDispatchQueue());
 		//check sqs return queue
 		System.out.println(Initializer.INSTANCE.getReturnQueue());
+		try {
+			Thread.sleep(10000);
+			System.out.println("starting teardown");
+			Initializer.INSTANCE.teardownAll();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }

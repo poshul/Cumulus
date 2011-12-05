@@ -2,8 +2,10 @@ package com.btechconsulting.wein.cumulus.initialization;
 
 
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.amazonaws.AmazonClientException;
@@ -11,11 +13,18 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
+import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+import com.amazonaws.services.ec2.model.Filter;
+import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
+import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.CreateQueueRequest;
+import com.amazonaws.services.sqs.model.DeleteQueueRequest;
 
 /**
  * @author Samuel Wein
@@ -29,14 +38,17 @@ public enum Initializer {
 	public enum wUStatus{
 		INFLIGHT,DONE,ERROR
 	}
-	private AmazonSQS dispatchQueue;
-	private AmazonSQS returnQueue;
+	private String dispatchQueue;
+	private String returnQueue;
+	private AmazonSQS sqsClient;
 	private Map<String, Map<String,wUStatus>> unitsOnServer;
 	
 	private Initializer(){
 		try{
-			dispatchQueue = createQueue(Constants.credentialsFile, Constants.dispatchQueueName);
-			returnQueue = createQueue(Constants.credentialsFile, Constants.returnQueueName);
+			sqsClient = new AmazonSQSClient(new PropertiesCredentials(
+					new FileInputStream(Constants.credentialsFile)));
+			dispatchQueue = createQueue(sqsClient, Constants.dispatchQueueName);
+			returnQueue = createQueue(sqsClient, Constants.returnQueueName);
 			unitsOnServer= createUnitsOnServer();
 			createInitialInstances(Constants.credentialsFile);
 		}
@@ -94,16 +106,60 @@ public enum Initializer {
 	 * @param credentialsFile the file containing credentials to access the AWS
 	 * @return AmazonSQS the queue
 	 */
-	private AmazonSQS createQueue(String credentialsFile, String queueName) throws Exception {
-		AmazonSQS sqs = new AmazonSQSClient(new PropertiesCredentials(
-				new FileInputStream(credentialsFile)));
+	private String createQueue(AmazonSQS client, String queueName) throws Exception {
 		// Create a queue
 		System.out.println("Creating a new SQS queue "+queueName+".\n");
 		CreateQueueRequest createQueueRequest = new CreateQueueRequest(queueName);
-		String myQueueUrl = sqs.createQueue(createQueueRequest).getQueueUrl();
+		String myQueueUrl = client.createQueue(createQueueRequest).getQueueUrl();
 		System.out.println("Created queue at "+myQueueUrl+"\n");
-		return sqs;
+		return myQueueUrl;
 	}
+	
+	/**
+	 * 
+	 */
+	public void teardownAll() throws Exception{
+		sqsClient.deleteQueue(new DeleteQueueRequest(dispatchQueue));
+		sqsClient.deleteQueue(new DeleteQueueRequest(returnQueue));
+		System.out.println("Deleted SQS queues");
+		//We create a request to describe current instances with the imageID that Cumulus uses.
+		DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest();
+		describeInstancesRequest.withFilters(new Filter("image-id").withValues(Constants.imageID));
+		System.out.println("Getting list of active cumulus drones");
+		// Initialize variables.
+		List<String> instanceIds = new ArrayList<String>();
+		try{
+			AmazonEC2 ec2= new AmazonEC2Client(new PropertiesCredentials(
+					new FileInputStream(Constants.credentialsFile)));
+			// get all of the instanceID's.  add them to the list
+			DescribeInstancesResult describeInstancesResult = ec2.describeInstances(describeInstancesRequest);
+			List<Reservation> reservations = describeInstancesResult.getReservations();
+			if (reservations!=null){
+				for (Reservation reservation: reservations){
+					List<Instance> instances = reservation.getInstances();
+					if (instances!=null){
+						for (Instance instance: instances){
+							instanceIds.add(instance.getInstanceId());
+						}
+					}
+				}
+			}
+			// Terminate instances.
+        	System.out.println("Terminate instances");
+        	TerminateInstancesRequest terminateRequest = new TerminateInstancesRequest(instanceIds);
+        	ec2.terminateInstances(terminateRequest);
+		} catch (AmazonServiceException e) {
+    		// Write out any exceptions that may have occurred.
+            System.err.println("Error terminating instances");
+    		System.err.println("Caught Exception: " + e.getMessage());
+            System.err.println("Reponse Status Code: " + e.getStatusCode());
+            System.err.println("Error Code: " + e.getErrorCode());
+            System.err.println("Request ID: " + e.getRequestId());
+        } catch (Exception e) {
+        	//caught another exception
+			System.err.println(e);		}
+		System.out.println("Killed all cumulus drones");
+		}
 
 	/**
 	 * @return the unitsOnServer
@@ -123,15 +179,29 @@ public enum Initializer {
 	/**
 	 * @return the dispatchQueue
 	 */
-	public AmazonSQS getDispatchQueue() {
+	public String getDispatchQueue() {
 		return dispatchQueue;
 	}
 
 	/**
 	 * @return the returnQueue
 	 */
-	public AmazonSQS getReturnQueue() {
+	public String getReturnQueue() {
 		return returnQueue;
+	}
+
+	/**
+	 * @return the sqsClient
+	 */
+	public AmazonSQS getSqsClient() {
+		return sqsClient;
+	}
+
+	/**
+	 * @param sqsClient the sqsClient to set
+	 */
+	public void setSqsClient(AmazonSQS sqsClient) {
+		this.sqsClient = sqsClient;
 	}
 	
 	
