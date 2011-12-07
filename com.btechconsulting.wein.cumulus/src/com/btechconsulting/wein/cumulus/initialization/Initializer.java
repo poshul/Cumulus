@@ -41,7 +41,9 @@ public enum Initializer {
 	private String dispatchQueue;
 	private String returnQueue;
 	private AmazonSQS sqsClient;
-	private Map<String, Map<String,wUStatus>> unitsOnServer;
+	// units on server is a map of OwnerID to a map of JobID to a map of WorkUnitID to work Unit status
+	// TODO figure out how to get unit testing to work when this is private
+	Map<String, Map<String, Map<String,wUStatus>>> unitsOnServer;
 	
 	private Initializer(){
 		try{
@@ -98,8 +100,8 @@ public enum Initializer {
 	/* creatUnitsOnServer: creates the datastructure for storing workunits
 	 */
 
-	private Map<String, Map<String, wUStatus>> createUnitsOnServer() {
-		return Collections.synchronizedMap(new HashMap<String, Map<String,wUStatus>>());
+	private Map<String, Map<String, Map<String, wUStatus>>> createUnitsOnServer() {
+		return Collections.synchronizedMap(new HashMap<String, Map<String, Map<String,wUStatus>>>());
 	}
 
 	/* createQueue: creates the AWS SQS queue for cumulus.  Throws Exception if we can't create the queue
@@ -160,22 +162,52 @@ public enum Initializer {
 			System.err.println(e);		}
 		System.out.println("Killed all cumulus drones");
 		}
-
+	
 	/**
-	 * @return the unitsOnServer
+	 * putJobOnServer: add a complete job (jobID, Map<String, wUstatus>) to the server
+	 * @param userID the user ID of the end user adding the job
+	 * @param jobID the ID of the job to add to the server
+	 * @param workUnits A map of workunits to add to the server
 	 */
-	public synchronized Map<String, Map<String, wUStatus>> getUnitsOnServer() {
-		return unitsOnServer;
+	public synchronized void putJobOnServer(
+			String userID, String jobID, Map<String, wUStatus> workUnits ){
+		this.unitsOnServer.get(userID).put(jobID, workUnits);
+	}
+	/**
+	 * removeJobFromServer: remove a complete job from the server
+	 * @param userID the user ID of the end user removing the job
+	 * @param jobID the ID of the job to be removed
+	 */
+	public synchronized void removeJobFromServer(
+			String userID, String jobID){
+		this.unitsOnServer.get(userID).remove(jobID);
+	}
+	
+	/**
+	 * putWorkUnit: puts a workunit into an existing job.  NB: This either creates a new work unit, or overwrites an existing one
+	 * @param userID the ID of the end user putting in the work unit
+	 * @param jobID the ID of the job for which the work unit is being modified
+	 * @param workUnitID the ID of the work unit to be modified
+	 * @param newStatus the new status of the work unit
+	 */
+
+	public synchronized void putWorkUnit(
+			String userID, String jobID, String workUnitID, wUStatus newStatus){
+		this.unitsOnServer.get(userID).get(jobID).put(workUnitID, newStatus);
 	}
 
 	/**
-	 * @param unitsOnServer the unitsOnServer to set
+	 * getStatusOfWorkUnit: returns the status of the selected work unit
+	 * @param userID the ID of the end user querying the work unit
+	 * @param jobID the ID of the job which is being queried
+	 * @param workUnitID the ID of the work unit being queried 
+	 * @return wUStatus the status of the work unit
 	 */
-	public synchronized void setUnitsOnServer(
-			Map<String, Map<String, wUStatus>> unitsOnServer) {
-		this.unitsOnServer = unitsOnServer;
+	public synchronized wUStatus getStatusOfWorkUnit(
+			String userID, String jobID, String workUnitID){
+		return this.unitsOnServer.get(userID).get(jobID).get(workUnitID);
 	}
-
+	
 	/**
 	 * @return the dispatchQueue
 	 */
@@ -197,13 +229,6 @@ public enum Initializer {
 		return sqsClient;
 	}
 
-	/**
-	 * @param sqsClient the sqsClient to set
-	 */
-	public void setSqsClient(AmazonSQS sqsClient) {
-		this.sqsClient = sqsClient;
-	}
-	
 	
 
 }

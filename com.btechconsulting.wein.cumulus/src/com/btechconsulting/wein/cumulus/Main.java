@@ -9,7 +9,7 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		//check units on server
-		System.out.println(Initializer.INSTANCE.getUnitsOnServer());
+		//System.out.println(Initializer.INSTANCE.getUnitsOnServer());
 		//check sqs dispatch queue
 		System.out.println(Initializer.INSTANCE.getDispatchQueue());
 		//check sqs return queue
