@@ -171,6 +171,10 @@ public enum Initializer {
 	 */
 	public synchronized void putJobOnServer(
 			String userID, String jobID, Map<String, wUStatus> workUnits ){
+		//If this user doesn't have any existing jobs, create the user
+		if (this.unitsOnServer.get(userID)==null){
+			this.unitsOnServer.put(userID,new HashMap<String, Map<String, wUStatus>>());
+		}
 		this.unitsOnServer.get(userID).put(jobID, workUnits);
 	}
 	/**

@@ -8,6 +8,7 @@ import static org.junit.Assert.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.AfterClass;
 import org.junit.Test;
 
 import com.btechconsulting.wein.cumulus.initialization.Initializer.wUStatus;
@@ -18,22 +19,28 @@ import com.btechconsulting.wein.cumulus.initialization.Initializer.wUStatus;
  */
 public class InitializerTest {
 
-/*	*//**
+	/**
 	 * Test method for {@link com.btechconsulting.wein.cumulus.initialization.Initializer#teardownAll()}.
-	 *//*
-	@Test
-	public void testTeardownAll() {
-		fail("Not yet implemented");
-	}*/
+	 */
+	@AfterClass
+	public static void testTeardownAll() {
+		try {
+			Initializer.INSTANCE.teardownAll();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 
 	/**
 	 * Test method for {@link com.btechconsulting.wein.cumulus.initialization.Initializer#putJobOnServer(java.lang.String, java.lang.String, java.util.Map)}.
 	 */
 	@Test
 	public void testPutJobOnServer() {
-		Map<String, wUStatus> testWorkUnit=  new HashMap<String, wUStatus>();
-		testWorkUnit.put("first", wUStatus.INFLIGHT);
-		Initializer.INSTANCE.putJobOnServer("0", "0",testWorkUnit);
+		Map<String, wUStatus> testJob=  new HashMap<String, wUStatus>();
+		testJob.put("first", wUStatus.INFLIGHT);
+		Initializer.INSTANCE.putJobOnServer("0", "0",testJob);
 		assert(Initializer.INSTANCE.unitsOnServer.get("0").get("0").get("first")==wUStatus.INFLIGHT);
 	}
 
@@ -86,7 +93,7 @@ public class InitializerTest {
 	 */
 	@Test
 	public void testGetDispatchQueue() {
-		fail("Not yet implemented");
+		assertNotNull(Initializer.INSTANCE.getDispatchQueue());
 	}
 
 	/**
@@ -94,7 +101,7 @@ public class InitializerTest {
 	 */
 	@Test
 	public void testGetReturnQueue() {
-		fail("Not yet implemented");
+		assertNotNull(Initializer.INSTANCE.getDispatchQueue());
 	}
 
 	/**
@@ -102,7 +109,7 @@ public class InitializerTest {
 	 */
 	@Test
 	public void testGetSqsClient() {
-		fail("Not yet implemented");
+		assertNotNull(Initializer.INSTANCE.getDispatchQueue());
 	}
 
 }
