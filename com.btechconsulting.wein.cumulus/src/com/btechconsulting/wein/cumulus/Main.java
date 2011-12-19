@@ -1,13 +1,32 @@
 package com.btechconsulting.wein.cumulus;
 
+import java.io.FileInputStream;
+import java.io.StringReader;
+import java.util.List;
+import java.util.Map.Entry;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
+
+import com.amazonaws.auth.PropertiesCredentials;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSClient;
+import com.amazonaws.services.sqs.model.Message;
+import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
+import com.btechconsulting.wein.cumulus.initialization.Constants;
 import com.btechconsulting.wein.cumulus.initialization.Initializer;
+import com.btechconsulting.wein.cumulus.model.VinaParams;
+import com.btechconsulting.wein.cumulus.model.WorkUnit;
+import com.btechconsulting.wein.cumulus.workUnitGenerator.WorkUnitGenerator;
 
 public class Main {
 
+
+	//This class is just a scratch pad
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
+	/*	public static void main(String[] args) {
 		//check units on server
 		//System.out.println(Initializer.INSTANCE.getUnitsOnServer());
 		//check sqs dispatch queue
@@ -22,6 +41,54 @@ public class Main {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}*/
+	public static void main(String[] args) {
+		//manually generate workunit
+		WorkUnit testWorkUnit= new WorkUnit();
+		String receptor="1";
+		String ownerId="0";
+		String jobId="2";
+		String molecule="ZINC68740768";
+		String workUnitId="020";
+		VinaParams params = new VinaParams();
+		params.setCenterX(0);
+		params.setCenterY(3);
+		params.setCenterZ(-1);
+		params.setExhaustiveness(9);
+		params.setNumModes(7);
+		params.setSizeX(3);
+		testWorkUnit.setJobID(jobId);
+		testWorkUnit.setOwnerID(ownerId);
+		testWorkUnit.setPointerToMolecule(molecule);
+		testWorkUnit.setPointerToReceptor(receptor);
+		testWorkUnit.setVinaParams(params);
+		testWorkUnit.setWorkUnitID(workUnitId);
+		try{
+			WorkUnitGenerator.PutWorkUnitInSQS(testWorkUnit);
+			AmazonSQS sqsClient = new AmazonSQSClient(new PropertiesCredentials(
+					new FileInputStream(Constants.credentialsFile)));
+			ReceiveMessageRequest messageRequest= new ReceiveMessageRequest(Initializer.INSTANCE.getDispatchQueue());
+			List<Message> messages= sqsClient.receiveMessage(messageRequest).getMessages();
+			for (Message message : messages) {
+				System.out.println("  Message");
+				System.out.println("    MessageId:     " + message.getMessageId());
+				System.out.println("    ReceiptHandle: " + message.getReceiptHandle());
+				System.out.println("    MD5OfBody:     " + message.getMD5OfBody());
+				System.out.println("    Body:          " + message.getBody());
+				//test unmarshalling of the message
+				JAXBContext context= JAXBContext.newInstance(WorkUnit.class);
+				Unmarshaller um = context.createUnmarshaller();
+				WorkUnit umWorkUnit=(WorkUnit) um.unmarshal(new StringReader(message.getBody()));
+				System.out.println(umWorkUnit.getPointerToMolecule());
+			}
+			System.out.println();
+
+		}
+		catch (Exception e) {
+			System.err.println(e.getStackTrace());
+		}
+
+
 	}
 
 }

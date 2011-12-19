@@ -1,13 +1,20 @@
 package com.btechconsulting.wein.cumulus.model;
 
+import java.io.FileReader;
+
+import javax.naming.Context;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+
+import org.apache.naming.ContextAccessController;
 
 public class JaxBobjectsTest {
 
 	/**
 	 * @param args
+	 * TODO turn this into actual unit tests
 	 */
 	private static final String TEST_XML= "./text.xml";
 	
@@ -18,15 +25,33 @@ public class JaxBobjectsTest {
 		params.setCenterZ(-1);
 		params.setExhaustiveness(9);
 		params.setNumModes(7);
+		params.setSizeX(3);
+		//Build test workunit
+		WorkUnit unit = new WorkUnit();
+		unit.setJobID("1");
+		unit.setVinaParams(params);
+		unit.setPointerToMolecule("ZINC68740768");
+		unit.setPointerToReceptor("2");
+		unit.setOwnerID("0");
+		unit.setWorkUnitID("010");
 		
 		// Create jaxb context and instantiate marshaller
 		try {
 			JAXBContext context = JAXBContext.newInstance(VinaParams.class);
 			Marshaller m = context.createMarshaller();
+			System.out.println("Testing Marshaller\n");
 			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 			m.marshal(params, System.out);
-		} catch (JAXBException e) {
-			// TODO Auto-generated catch block
+			System.out.println("Testing UnMarshaller\n");
+			Unmarshaller um = context.createUnmarshaller();
+			VinaParams inParams = (VinaParams) um.unmarshal(new FileReader(TEST_XML));
+			System.out.println(inParams.getNumModes());
+			System.out.println("testing marshalling of WorkUnit");
+			context= JAXBContext.newInstance(WorkUnit.class);
+			m = context.createMarshaller();
+			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+			m.marshal(unit, System.out);
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

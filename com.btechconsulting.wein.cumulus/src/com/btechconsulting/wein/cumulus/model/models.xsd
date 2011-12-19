@@ -57,4 +57,30 @@
     		<xs:element name="workUnitID" type="string"></xs:element>
     	</xs:sequence>
     </xs:complexType>
+
+    <xs:complexType name="FilterParams">
+    	<xs:sequence>
+    		<xs:element name="min_mwt" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_mwt" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_logp" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_logp" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_desolv_apolar" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_desolv_apolar" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_desolv_polar" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_desolv_polar" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_hbd" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+            <xs:element name="max_hbd" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+            <xs:element name="min_hba" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_hba" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_tpsa" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_tpsa" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_charge" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_charge" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_nrb" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_nrb" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="smiles" type="string" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="supplier" type="string" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_suppliers" type="string" maxOccurs="1" minOccurs="0"></xs:element>
+    	</xs:sequence>
+    </xs:complexType>
 </xs:schema>

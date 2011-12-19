@@ -52,7 +52,7 @@ public enum Initializer {
 			dispatchQueue = createQueue(sqsClient, Constants.dispatchQueueName);
 			returnQueue = createQueue(sqsClient, Constants.returnQueueName);
 			unitsOnServer= createUnitsOnServer();
-			createInitialInstances(Constants.credentialsFile);
+			//createInitialInstances(Constants.credentialsFile);  //TODO change this back, EC2 creation is disabled for testing
 		}
 		catch (AmazonServiceException ase) {
 			System.err.println("Caught an AmazonServiceException, which means your request made it " +
