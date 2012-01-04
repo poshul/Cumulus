@@ -121,6 +121,29 @@ public class FilterParams {
     protected String supplier;
     @XmlElement(name = "min_suppliers")
     protected String minSuppliers;
+    
+    public FilterParams(){
+    	//these default parameters are derived from the ZINC clean-leads data-set.
+    	this.minMwt=(float) 150;
+    	this.maxMwt=(float) 350;
+    	this.minLogp=(float) -5.75;
+    	this.maxLogp=(float) 3.5;
+    	this.minDesolvApolar= (float) -20;
+    	this.maxDesolvApolar= (float) 20;
+    	this.minDesolvPolar= (float) -504;
+    	this.maxDesolvPolar= (float) .10;
+    	this.minHbd= 0;
+    	this.maxHbd= 10;
+    	this.minHba= 0;
+    	this.maxHba= 15;
+    	this.minTpsa=0;
+    	this.maxTpsa=255;
+    	this.minCharge=-6;
+    	this.maxCharge=4;
+    	this.minNrb=0;
+    	this.maxNrb=7;
+    	
+    }
 
     /**
      * Gets the value of the minMwt property.

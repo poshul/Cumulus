@@ -3,24 +3,15 @@
  */
 package com.btechconsulting.wein.cumulus.workUnitGenerator;
 
-import static org.junit.Assert.*;
-
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
@@ -30,22 +21,12 @@ import com.btechconsulting.wein.cumulus.initialization.Constants;
 import com.btechconsulting.wein.cumulus.initialization.Initializer;
 import com.btechconsulting.wein.cumulus.model.VinaParams;
 import com.btechconsulting.wein.cumulus.model.WorkUnit;
-import com.btechconsulting.wein.cumulus.workUnitGenerator.WorkUnitGenerator;
-import com.sun.jersey.api.client.AsyncViewResource.Builder;
 
 /**
  * @author samuel
  *
  */
 public class WorkUnitGeneratorTest {
-
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@Before
-	public void setUp() throws Exception {
-	}
-
 
 	/**
 	 * Test method for {@link com.btechconsulting.wein.cumulus.workUnitGenerator.WorkUnitGenerator#BuildWorkUnit(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, com.btechconsulting.wein.cumulus.model.VinaParams)}.
@@ -56,9 +37,9 @@ public class WorkUnitGeneratorTest {
 		WorkUnit testWorkUnit= new WorkUnit();
 		String receptor="1";
 		String ownerId="0";
-		String jobId="2";
+		Integer jobId=2;
 		String molecule="ZINC68740768";
-		String workUnitId="020";
+		Integer workUnitId=020;
 		VinaParams params = new VinaParams();
 		params.setCenterX(0);
 		params.setCenterY(3);
@@ -86,9 +67,9 @@ public class WorkUnitGeneratorTest {
 		WorkUnit testWorkUnit= new WorkUnit();
 		String receptor="1";
 		String ownerId="0";
-		String jobId="2";
+		Integer jobId=2;
 		String molecule="ZINC68740768";
-		String workUnitId="020";
+		Integer workUnitId=020;
 		VinaParams params = new VinaParams();
 		params.setCenterX(0);
 		params.setCenterY(3);
@@ -117,8 +98,8 @@ public class WorkUnitGeneratorTest {
 		 }
 	}
 
-	@After
+/*	@After
 	public void tearDown() throws Exception {
-		//TODO write this
-	}
+		Initializer.INSTANCE.teardownAll();
+	}*/
 }

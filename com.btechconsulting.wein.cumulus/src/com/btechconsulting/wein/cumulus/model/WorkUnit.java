@@ -28,8 +28,8 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="pointerToMolecule" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *         &lt;element name="pointerToReceptor" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *         &lt;element name="ownerID" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="jobID" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="workUnitID" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="jobID" type="{http://www.w3.org/2001/XMLSchema}int"/>
+ *         &lt;element name="workUnitID" type="{http://www.w3.org/2001/XMLSchema}int"/>
  *         &lt;element name="vinaParams" type="{http://www.example.org/WorkUnit}VinaParams"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
@@ -58,9 +58,9 @@ public class WorkUnit {
     @XmlElement(required = true)
     protected String ownerID;
     @XmlElement(required = true)
-    protected String jobID;
+    protected Integer jobID;
     @XmlElement(required = true)
-    protected String workUnitID;
+    protected Integer workUnitID;
     @XmlElement(required = true)
     protected VinaParams vinaParams;
 
@@ -144,7 +144,7 @@ public class WorkUnit {
      *     {@link String }
      *     
      */
-    public String getJobID() {
+    public Integer getJobID() {
         return jobID;
     }
 
@@ -156,7 +156,7 @@ public class WorkUnit {
      *     {@link String }
      *     
      */
-    public void setJobID(String value) {
+    public void setJobID(Integer value) {
         this.jobID = value;
     }
 
@@ -168,7 +168,7 @@ public class WorkUnit {
      *     {@link String }
      *     
      */
-    public String getWorkUnitID() {
+    public Integer getWorkUnitID() {
         return workUnitID;
     }
 
@@ -180,7 +180,7 @@ public class WorkUnit {
      *     {@link String }
      *     
      */
-    public void setWorkUnitID(String value) {
+    public void setWorkUnitID(Integer value) {
         this.workUnitID = value;
     }
 

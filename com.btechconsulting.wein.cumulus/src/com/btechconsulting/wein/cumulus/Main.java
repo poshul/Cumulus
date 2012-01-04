@@ -1,23 +1,5 @@
 package com.btechconsulting.wein.cumulus;
 
-import java.io.FileInputStream;
-import java.io.StringReader;
-import java.util.List;
-import java.util.Map.Entry;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
-
-import com.amazonaws.auth.PropertiesCredentials;
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClient;
-import com.amazonaws.services.sqs.model.Message;
-import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
-import com.btechconsulting.wein.cumulus.initialization.Constants;
-import com.btechconsulting.wein.cumulus.initialization.Initializer;
-import com.btechconsulting.wein.cumulus.model.VinaParams;
-import com.btechconsulting.wein.cumulus.model.WorkUnit;
-import com.btechconsulting.wein.cumulus.workUnitGenerator.WorkUnitGenerator;
 
 public class Main {
 
@@ -42,7 +24,7 @@ public class Main {
 			e.printStackTrace();
 		}
 	}*/
-	public static void main(String[] args) {
+/*	public static void main(String[] args) {
 		//manually generate workunit
 		WorkUnit testWorkUnit= new WorkUnit();
 		String receptor="1";
@@ -90,5 +72,5 @@ public class Main {
 
 
 	}
-
+*/
 }

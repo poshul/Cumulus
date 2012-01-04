@@ -7,6 +7,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -19,6 +22,8 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.btechconsulting.wein.cumulus.initialization.Constants;
 import com.btechconsulting.wein.cumulus.initialization.Initializer;
+import com.btechconsulting.wein.cumulus.initialization.Initializer.wUStatus;
+import com.btechconsulting.wein.cumulus.model.FilterParams;
 import com.btechconsulting.wein.cumulus.model.VinaParams;
 import com.btechconsulting.wein.cumulus.model.WorkUnit;
 
@@ -28,9 +33,22 @@ import com.btechconsulting.wein.cumulus.model.WorkUnit;
  */
 public class WorkUnitGenerator {
 	
-/*	public Void BuildJob(String receptor, String ownerId, VinaParams vinaParams, FilterParams filterParams){
-		
-	}*/
+	public void BuildJob(String receptor, String ownerID, VinaParams vinaParams, FilterParams filterParams) throws SQLException, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
+		//find the new JobID
+		Integer jobID= Initializer.INSTANCE.getMaxJobID(ownerID);
+		//put an empty job on the server
+		Initializer.INSTANCE.putJobOnServer(ownerID, jobID,new HashMap<Integer,wUStatus>());
+		DetermineWorkToDo jobWork= new DetermineWorkToDo(receptor, ownerID, filterParams);
+		String receptorID=jobWork.PutReceptorInDatabase();
+		List<String> compoundIDs=jobWork.FilterCompoundsInDatabase();
+		Integer workUnitId=0;
+		for(String i:compoundIDs){
+			Initializer.INSTANCE.putWorkUnit(ownerID, jobID, PutWorkUnitInSQS(BuildWorkUnit(receptorID, i, ownerID, jobID, workUnitId, vinaParams)), wUStatus.INFLIGHT); 
+			workUnitId++;
+		}
+	}
+	
+	
 	
 	/**
 	 * 
@@ -42,7 +60,7 @@ public class WorkUnitGenerator {
 	 * @param vinaParams a set of params passed to Autodock Vina 
 	 * @return the constructed workUnit object
 	 */
-	public static WorkUnit BuildWorkUnit(String receptor, String molecule, String ownerId, String jobId, String workUnitId, VinaParams vinaParams){
+	public static WorkUnit BuildWorkUnit(String receptor, String molecule, String ownerId, Integer jobId, Integer workUnitId, VinaParams vinaParams){
 		WorkUnit localUnit = new WorkUnit();
 		localUnit.setPointerToReceptor(receptor);
 		localUnit.setPointerToMolecule(molecule);
@@ -53,7 +71,7 @@ public class WorkUnitGenerator {
 		return localUnit;
 	}
 	
-	public static String PutWorkUnitInSQS(WorkUnit workunit) throws InternalError, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
+	public static Integer PutWorkUnitInSQS(WorkUnit workunit) throws InternalError, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
 		//do the marshalling
         java.io.StringWriter sw = new StringWriter();
 		JAXBContext context = JAXBContext.newInstance(WorkUnit.class);

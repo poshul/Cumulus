@@ -21,7 +21,30 @@
   	<dependency>
   		<groupId>javax.xml</groupId>
   		<artifactId>jaxb-api</artifactId>
-  		<version>2.1</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.apache.tomcat</groupId>
+  		<artifactId>dbcp</artifactId>
+  	</dependency>
+  	<dependency>
+  		<groupId>com.amazonaws</groupId>
+  		<artifactId>aws-java-sdk</artifactId>
+  	</dependency>
+  	<dependency>
+  		<groupId>jdbc</groupId>
+  		<artifactId>jdbc</artifactId>
+  	</dependency>
+  	<dependency>
+  		<groupId>com.mysql</groupId>
+  		<artifactId>management</artifactId>
+  	</dependency>
+  	<dependency>
+  		<groupId>com.sun.jersey</groupId>
+  		<artifactId>jersey</artifactId>
+  	</dependency>
+  	<dependency>
+  		<groupId>xerces</groupId>
+  		<artifactId>xerces</artifactId>
   	</dependency>
   </dependencies>
   <dependencyManagement>
@@ -46,13 +69,43 @@
   			<artifactId>jaxb-api</artifactId>
   			<version>2.1</version>
   		</dependency>
+  		<dependency>
+  			<groupId>org.apache.tomcat</groupId>
+  			<artifactId>dbcp</artifactId>
+  			<version>6.0.35</version>
+  		</dependency>
+  		<dependency>
+  			<groupId>com.amazonaws</groupId>
+  			<artifactId>aws-java-sdk</artifactId>
+  			<version>1.2.15</version>
+  		</dependency>
+  		<dependency>
+  			<groupId>jdbc</groupId>
+  			<artifactId>jdbc</artifactId>
+  			<version>2.0</version>
+  		</dependency>
+  		<dependency>
+  			<groupId>com.mysql</groupId>
+  			<artifactId>management</artifactId>
+  			<version>5-0-2-beta</version>
+  		</dependency>
+  		<dependency>
+  			<groupId>com.sun.jersey</groupId>
+  			<artifactId>jersey</artifactId>
+  			<version>0.8-ea</version>
+  		</dependency>
+  		<dependency>
+  			<groupId>xerces</groupId>
+  			<artifactId>xerces</artifactId>
+  			<version>2.4.0</version>
+  		</dependency>
   	</dependencies>
   </dependencyManagement>
   <repositories>
   	<repository>
   		<id>maven repository</id>
   		<name>Maven central repository</name>
-  		<url>https://maven-repository.dev.java.net/nonav/repository</url>
+  		<url>http://download.java.net/maven/2/</url>
   		<layout>default</layout>
   		<releases>
   			<enabled>true</enabled>

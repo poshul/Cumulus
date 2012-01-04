@@ -8,9 +8,9 @@
 
     <xs:element name="ownerID" type="string"></xs:element>
 
-    <xs:element name="jobID" type="string"></xs:element>
+    <xs:element name="jobID" type="int"></xs:element>
     
-    <xs:element name="workUnitID" type="string"></xs:element>
+    <xs:element name="workUnitID" type="int"></xs:element>
 
     <xs:element name="vinaParams" type="Q1:VinaParams"></xs:element>
     </xs:sequence>

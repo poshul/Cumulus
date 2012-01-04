@@ -2,13 +2,9 @@ package com.btechconsulting.wein.cumulus.model;
 
 import java.io.FileReader;
 
-import javax.naming.Context;
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-
-import org.apache.naming.ContextAccessController;
 
 public class JaxBobjectsTest {
 
@@ -28,12 +24,12 @@ public class JaxBobjectsTest {
 		params.setSizeX(3);
 		//Build test workunit
 		WorkUnit unit = new WorkUnit();
-		unit.setJobID("1");
+		unit.setJobID(1);
 		unit.setVinaParams(params);
 		unit.setPointerToMolecule("ZINC68740768");
 		unit.setPointerToReceptor("2");
 		unit.setOwnerID("0");
-		unit.setWorkUnitID("010");
+		unit.setWorkUnitID(010);
 		
 		// Create jaxb context and instantiate marshaller
 		try {

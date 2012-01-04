@@ -13,5 +13,17 @@
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
 	<classpathentry kind="con" path="com.amazonaws.eclipse.sdk.AWS_JAVA_SDK"/>
 	<classpathentry kind="lib" path="/home/samuel/src/junit-4.10.jar"/>
+	<classpathentry kind="lib" path="/home/samuel/jersey-archive-1.10/lib/asm-3.1.jar"/>
+	<classpathentry kind="lib" path="/home/samuel/jersey-archive-1.10/lib/jackson-core-asl-1.8.3.jar"/>
+	<classpathentry kind="lib" path="/home/samuel/jersey-archive-1.10/lib/jackson-jaxrs-1.8.3.jar"/>
+	<classpathentry kind="lib" path="/home/samuel/jersey-archive-1.10/lib/jackson-mapper-asl-1.8.3.jar"/>
+	<classpathentry kind="lib" path="/home/samuel/jersey-archive-1.10/lib/jackson-xc-1.8.3.jar"/>
+	<classpathentry kind="lib" path="/home/samuel/jersey-archive-1.10/lib/jersey-client-1.10.jar"/>
+	<classpathentry kind="lib" path="/home/samuel/jersey-archive-1.10/lib/jersey-core-1.10.jar"/>
+	<classpathentry kind="lib" path="/home/samuel/jersey-archive-1.10/lib/jersey-json-1.10.jar"/>
+	<classpathentry kind="lib" path="/home/samuel/jersey-archive-1.10/lib/jersey-server-1.10.jar"/>
+	<classpathentry kind="lib" path="/home/samuel/jersey-archive-1.10/lib/jersey-servlet-1.10.jar"/>
+	<classpathentry kind="lib" path="/home/samuel/jersey-archive-1.10/lib/jettison-1.1.jar"/>
+	<classpathentry kind="lib" path="/home/samuel/jersey-archive-1.10/lib/jsr311-api-1.1.1.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
