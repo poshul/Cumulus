@@ -26,6 +26,7 @@ import com.btechconsulting.wein.cumulus.initialization.Initializer.wUStatus;
 import com.btechconsulting.wein.cumulus.model.FilterParams;
 import com.btechconsulting.wein.cumulus.model.VinaParams;
 import com.btechconsulting.wein.cumulus.model.WorkUnit;
+import com.sun.jersey.core.util.Base64;
 
 /**
  * @author samuel
@@ -33,7 +34,7 @@ import com.btechconsulting.wein.cumulus.model.WorkUnit;
  */
 public class WorkUnitGenerator {
 	
-	public void BuildJob(String receptor, String ownerID, VinaParams vinaParams, FilterParams filterParams) throws SQLException, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
+	public static void BuildJob(String receptor, String ownerID, VinaParams vinaParams, FilterParams filterParams) throws SQLException, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
 		//find the new JobID
 		Integer jobID= Initializer.INSTANCE.getMaxJobID(ownerID);
 		//put an empty job on the server
@@ -80,8 +81,7 @@ public class WorkUnitGenerator {
 		m.marshal(workunit, sw);
 		String marshalledUnit= sw.toString();
 		//put on the queue
-		AmazonSQS sqsClient = new AmazonSQSClient(new PropertiesCredentials(
-				new FileInputStream(Constants.credentialsFile)));
+		AmazonSQS sqsClient = Initializer.INSTANCE.getSqsClient();
 		sqsClient.sendMessage(new SendMessageRequest(Initializer.INSTANCE.getDispatchQueue(),marshalledUnit));
 		
 		return workunit.getWorkUnitID();

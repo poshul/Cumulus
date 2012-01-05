@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 
 import com.btechconsulting.wein.cumulus.initialization.PooledConnectionFactory;
 import com.btechconsulting.wein.cumulus.model.FilterParams;
+import com.sun.jersey.core.util.Base64;
 
 public class DetermineWorkToDo {
 	private Connection conn = null;
@@ -42,7 +43,9 @@ public class DetermineWorkToDo {
 		try {
 			md = MessageDigest.getInstance("SHA-256");
 			byte[] bytes = md.digest(this.receptor.getBytes());
-			sha256=new String(bytes);
+			//encode the receptorID in base64
+			Base64 encoder = new Base64();
+			sha256=new String(encoder.encode(bytes));
 			//query="SELECT count(*) FROM cumulus.mol_properties;";
 			query="SELECT count(*) FROM cumulus.receptor WHERE sha256=\'"+sha256+"\' and owner_id=\'"+this.ownerId+"\';";
 		} catch (NoSuchAlgorithmException e) {
@@ -79,10 +82,10 @@ public class DetermineWorkToDo {
 		String query="";
 		// we use the non merging statement if we don't need to specify suppliers 
 		if (this.filterParams.getSupplier()!=null && this.filterParams.getMinSuppliers()!=null){
-			query="SELECT distinct(mol_properties.compound_id) FROM cumulus.mol_properties, cumulus.supplier_properties WHERE mol_properties.owner_id="+this.ownerId+" OR mol_properties.owner_id=0 AND supplier_properties.owner_id="+this.ownerId+" OR supplier_properties.owner_id=0 AND mol_properties.compound_id=supplier_properties.compound_id ";
+			query="SELECT distinct(mol_properties.compound_id) FROM cumulus.mol_properties, cumulus.supplier_properties WHERE mol_properties.owner_id=\""+this.ownerId+"\" OR mol_properties.owner_id=0 AND supplier_properties.owner_id=\""+this.ownerId+"\" OR supplier_properties.owner_id=\"0\" AND mol_properties.compound_id=supplier_properties.compound_id ";
 		}
 		else{
-			query="SELECT distinct(mol_properties.compound_id) FROM cumulus.mol_properties WHERE mol_properties.owner_id="+this.ownerId+" OR mol_properties.owner_id=0";
+			query="SELECT distinct(mol_properties.compound_id) FROM cumulus.mol_properties WHERE mol_properties.owner_id=\""+this.ownerId+"\" OR mol_properties.owner_id=\"0\"";
 		}
 		// TODO This block is sloppy.
 		if (this.filterParams.getMinMwt()!=null){

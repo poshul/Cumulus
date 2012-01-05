@@ -1,8 +1,42 @@
 package com.btechconsulting.wein.cumulus;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.sql.SQLException;
+
+import javax.xml.bind.JAXBException;
+
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
+import com.btechconsulting.wein.cumulus.model.FilterParams;
+import com.btechconsulting.wein.cumulus.model.VinaParams;
+import com.btechconsulting.wein.cumulus.workUnitGenerator.WorkUnitGenerator;
+
 
 public class Main {
 
+	public static void main(String[] args) {
+		try {
+			WorkUnitGenerator.BuildJob("blah", "test", new VinaParams(), new FilterParams());
+		} catch (AmazonServiceException e) {
+			e.printStackTrace();
+		} catch (AmazonClientException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JAXBException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 	//This class is just a scratch pad
 	/**
