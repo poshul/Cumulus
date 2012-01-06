@@ -60,7 +60,7 @@ public class WorkUnitGeneratorTest {
 	}
 
 	/**
-	 * Test method for {@link com.btechconsulting.wein.cumulus.workUnitGenerator.WorkUnitGenerator#PutWorkUnitInSQS(com.btechconsulting.wein.cumulus.model.WorkUnit)}.
+	 * Test method for {@link com.btechconsulting.wein.cumulus.workUnitGenerator.WorkUnitGenerator#putWorkUnitInSQSBatch(com.btechconsulting.wein.cumulus.model.WorkUnit)}.
 	 */
 	@Test
 	public void testPutWorkUnitInSQS() throws Exception{
@@ -84,7 +84,7 @@ public class WorkUnitGeneratorTest {
 		testWorkUnit.setPointerToReceptor(receptor);
 		testWorkUnit.setVinaParams(params);
 		testWorkUnit.setWorkUnitID(workUnitId);
-		WorkUnitGenerator.PutWorkUnitInSQS(testWorkUnit);
+		WorkUnitGenerator.putWorkUnitInSQSBatch(testWorkUnit);
 		AmazonSQS sqsClient = new AmazonSQSClient(new PropertiesCredentials(
 				new FileInputStream(Constants.credentialsFile)));
 		ReceiveMessageRequest messageRequest= new ReceiveMessageRequest(Initializer.INSTANCE.getDispatchQueue());

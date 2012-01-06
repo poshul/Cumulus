@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.PropertiesCredentials;
@@ -22,9 +25,12 @@ import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSAsync;
+import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.DeleteQueueRequest;
+import com.btechconsulting.wein.cumulus.model.WorkUnit;
 
 /**
  * @author Samuel Wein
@@ -40,14 +46,18 @@ public enum Initializer {
 	}
 	private String dispatchQueue;
 	private String returnQueue;
-	private AmazonSQS sqsClient;
+	private AmazonSQSAsync sqsClient;
+	private Marshaller workUnitMarshaller;
 	// units on server is a map of OwnerID to a map of JobID to a map of WorkUnitID to work Unit status
 	// TODO figure out how to get unit testing to work when this is private
 	Map<String, Map<Integer, Map<Integer,wUStatus>>> unitsOnServer;
 
 	private Initializer(){
 		try{
-			sqsClient = new AmazonSQSClient(new PropertiesCredentials(
+			JAXBContext context = JAXBContext.newInstance(WorkUnit.class);
+			workUnitMarshaller = context.createMarshaller();
+			workUnitMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+			sqsClient = new AmazonSQSAsyncClient(new PropertiesCredentials(
 					new FileInputStream(Constants.credentialsFile)));
 			dispatchQueue = createQueue(sqsClient, Constants.dispatchQueueName);
 			returnQueue = createQueue(sqsClient, Constants.returnQueueName);
@@ -242,8 +252,22 @@ public enum Initializer {
 	/**
 	 * @return the sqsClient
 	 */
-	public AmazonSQS getSqsClient() {
+	public AmazonSQSAsync getSqsClient() {
 		return sqsClient;
+	}
+
+	/**
+	 * @return the workUnitMarshaller
+	 */
+	public Marshaller getWorkUnitMarshaller() {
+		return workUnitMarshaller;
+	}
+
+	/**
+	 * @param workUnitMarshaller the workUnitMarshaller to set
+	 */
+	public void setWorkUnitMarshaller(Marshaller workUnitMarshaller) {
+		this.workUnitMarshaller = workUnitMarshaller;
 	}
 
 

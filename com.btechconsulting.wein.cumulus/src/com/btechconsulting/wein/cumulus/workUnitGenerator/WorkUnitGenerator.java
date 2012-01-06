@@ -8,8 +8,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Future;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -18,7 +21,11 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSClient;
+import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
+import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
+import com.amazonaws.services.sqs.model.SendMessageBatchResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.btechconsulting.wein.cumulus.initialization.Constants;
 import com.btechconsulting.wein.cumulus.initialization.Initializer;
@@ -33,7 +40,7 @@ import com.sun.jersey.core.util.Base64;
  *
  */
 public class WorkUnitGenerator {
-	
+
 	public static void BuildJob(String receptor, String ownerID, VinaParams vinaParams, FilterParams filterParams) throws SQLException, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
 		//find the new JobID
 		Integer jobID= Initializer.INSTANCE.getMaxJobID(ownerID);
@@ -43,14 +50,44 @@ public class WorkUnitGenerator {
 		String receptorID=jobWork.PutReceptorInDatabase();
 		List<String> compoundIDs=jobWork.FilterCompoundsInDatabase();
 		Integer workUnitId=0;
+		List<SendMessageBatchRequestEntry> batch=new ArrayList<SendMessageBatchRequestEntry>();
+		Integer iter=0;
+		//List<Future<SendMessageBatchResult>> futures= new ArrayList<Future<SendMessageBatchResult>>();
 		for(String i:compoundIDs){
-			Initializer.INSTANCE.putWorkUnit(ownerID, jobID, PutWorkUnitInSQS(BuildWorkUnit(receptorID, i, ownerID, jobID, workUnitId, vinaParams)), wUStatus.INFLIGHT); 
+			SendMessageBatchRequestEntry entry=putWorkUnitInSQSBatch(BuildWorkUnit(receptorID, i, ownerID, jobID, workUnitId, vinaParams));
+			batch.add(entry);
+			Initializer.INSTANCE.putWorkUnit(ownerID, jobID, Integer.getInteger(entry.getId()), wUStatus.INFLIGHT);//TODO this needs to be atomic with the actual adding of the unit to sqs
 			workUnitId++;
+			iter++;
+			System.out.println(workUnitId); //TODO remove this
+			if (iter>=10){
+				SendMessageBatchRequest request= new SendMessageBatchRequest(Initializer.INSTANCE.getDispatchQueue(), batch);
+				//futures.add(Initializer.INSTANCE.getSqsClient().sendMessageBatchAsync(request));
+				Initializer.INSTANCE.getSqsClient().sendMessageBatch(request);
+				System.out.println("batch sent");
+				iter=0;
+				batch.removeAll(batch);
+			}
+
 		}
+		SendMessageBatchRequest request= new SendMessageBatchRequest(Initializer.INSTANCE.getDispatchQueue(), batch);
+		//futures.add(Initializer.INSTANCE.getSqsClient().sendMessageBatchAsync(request));
+		Initializer.INSTANCE.getSqsClient().sendMessageBatch(request);
+		System.out.println("batch sent");
+/*		while(futures.isEmpty()==false){
+			List<Future<SendMessageBatchResult>> toRemove= new ArrayList<Future<SendMessageBatchResult>>();
+			for (Future<SendMessageBatchResult>i:futures){
+				if(i.isDone()==true){
+					toRemove.add(i);
+				}
+			futures.removeAll(toRemove);
+			System.out.println("Futures left:"+futures.size());
+			}
+		}*/
 	}
-	
-	
-	
+
+
+
 	/**
 	 * 
 	 * @param receptor a string representing the receptor_id in the database
@@ -71,21 +108,19 @@ public class WorkUnitGenerator {
 		localUnit.setVinaParams(vinaParams);
 		return localUnit;
 	}
-	
-	public static Integer PutWorkUnitInSQS(WorkUnit workunit) throws InternalError, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
+
+	public static SendMessageBatchRequestEntry putWorkUnitInSQSBatch(WorkUnit workunit) throws InternalError, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
 		//do the marshalling
-        java.io.StringWriter sw = new StringWriter();
-		JAXBContext context = JAXBContext.newInstance(WorkUnit.class);
-		Marshaller m = context.createMarshaller();
-		m.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+		java.io.StringWriter sw = new StringWriter();
+		Marshaller m = Initializer.INSTANCE.getWorkUnitMarshaller();
 		m.marshal(workunit, sw);
 		String marshalledUnit= sw.toString();
-		//put on the queue
-		AmazonSQS sqsClient = Initializer.INSTANCE.getSqsClient();
-		sqsClient.sendMessage(new SendMessageRequest(Initializer.INSTANCE.getDispatchQueue(),marshalledUnit));
-		
-		return workunit.getWorkUnitID();
+		SendMessageBatchRequestEntry entry = new SendMessageBatchRequestEntry(workunit.getWorkUnitID().toString(),marshalledUnit);
+		//put in the entry
+		/*AmazonSQSAsync sqsClient = Initializer.INSTANCE.getSqsClient();
+		sqsClient.sendMessageAsync(new SendMessageRequest(Initializer.INSTANCE.getDispatchQueue(),marshalledUnit));*/
+		return entry;
 	}
-	
-	
+
+
 }
