@@ -17,6 +17,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
+import org.apache.log4j.Logger;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.PropertiesCredentials;
@@ -33,6 +35,7 @@ import com.btechconsulting.wein.cumulus.initialization.Initializer.wUStatus;
 import com.btechconsulting.wein.cumulus.model.FilterParams;
 import com.btechconsulting.wein.cumulus.model.VinaParams;
 import com.btechconsulting.wein.cumulus.model.WorkUnit;
+import com.btechconsulting.wein.cumulus.web.rest.DoSearchHandler;
 import com.sun.jersey.core.util.Base64;
 
 /**
@@ -40,8 +43,11 @@ import com.sun.jersey.core.util.Base64;
  *
  */
 public class WorkUnitGenerator {
+	
+	private final Logger logger= Logger.getLogger(WorkUnitGenerator.class);
 
-	public static void BuildJob(String receptor, String ownerID, VinaParams vinaParams, FilterParams filterParams) throws SQLException, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
+
+	public static Integer BuildJob(String receptor, String ownerID, VinaParams vinaParams, FilterParams filterParams) throws SQLException, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
 		//find the new JobID
 		Integer jobID= Initializer.INSTANCE.getMaxJobID(ownerID);
 		//put an empty job on the server
@@ -84,6 +90,8 @@ public class WorkUnitGenerator {
 			System.out.println("Futures left:"+futures.size());
 			}
 		}*/
+		//logger.debug("created "+workUnitId+" workunits");
+		return workUnitId;
 	}
 
 
