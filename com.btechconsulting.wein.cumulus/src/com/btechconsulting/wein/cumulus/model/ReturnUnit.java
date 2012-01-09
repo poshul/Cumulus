@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="ownerID" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *         &lt;element name="jobID" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *         &lt;element name="workUnitID" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -40,7 +41,8 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "ReturnUnit", propOrder = {
     "ownerID",
     "jobID",
-    "workUnitID"
+    "workUnitID",
+    "status"
 })
 @XmlRootElement
 public class ReturnUnit {
@@ -51,6 +53,8 @@ public class ReturnUnit {
     protected String jobID;
     @XmlElement(required = true)
     protected String workUnitID;
+    @XmlElement(required = true)
+    protected String status;
 
     /**
      * Gets the value of the ownerID property.
@@ -122,6 +126,30 @@ public class ReturnUnit {
      */
     public void setWorkUnitID(String value) {
         this.workUnitID = value;
+    }
+
+    /**
+     * Gets the value of the status property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getStatus() {
+        return status;
+    }
+
+    /**
+     * Sets the value of the status property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setStatus(String value) {
+        this.status = value;
     }
 
 }

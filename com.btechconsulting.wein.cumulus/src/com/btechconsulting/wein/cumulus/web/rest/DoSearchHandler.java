@@ -95,7 +95,7 @@ public class DoSearchHandler implements RestHandler {
 		
 		try {
 			WorkUnitGenerator.BuildJob(receptor, ownerId, vinaParamsObj, filterParamsObj);
-			//TODO return number of units created to the user
+			//TODO return number of units created to 
 		} catch (AmazonServiceException ase) {
 			logger.error(ase);
 			throw new ServletException("Error in AWS please try again later.");

@@ -55,6 +55,7 @@
     		<xs:element name="ownerID" type="string"></xs:element>
     		<xs:element name="jobID" type="string"></xs:element>
     		<xs:element name="workUnitID" type="string"></xs:element>
+    		<xs:element name="status" type="string"></xs:element>
     	</xs:sequence>
     </xs:complexType>
 
