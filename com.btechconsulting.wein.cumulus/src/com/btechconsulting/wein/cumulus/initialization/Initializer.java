@@ -16,6 +16,7 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.model.CreateTagsRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
@@ -23,11 +24,11 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
+import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
-import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.DeleteQueueRequest;
 import com.btechconsulting.wein.cumulus.model.WorkUnit;
@@ -112,6 +113,16 @@ public enum Initializer {
 
 		RunInstancesResult runInstances = ec2.runInstances(runInstancesRequest);
 		System.out.println(runInstances.toString());
+		
+		//tag the instances with the dispatch and return queues
+		List<Instance> instances = runInstances.getReservation().getInstances();
+		for (Instance instance : instances) {
+		  CreateTagsRequest createTagsRequest = new CreateTagsRequest();
+		  createTagsRequest.withResources(instance.getInstanceId()) //
+		      .withTags(new Tag("dispatch", this.dispatchQueue))
+		      .withTags(new Tag("return", this.returnQueue));
+		  ec2.createTags(createTagsRequest);
+		}
 	}
 
 	/* creatUnitsOnServer: creates the datastructure for storing workunits
