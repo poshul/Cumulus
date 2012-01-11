@@ -37,7 +37,7 @@ public class InitializerTest {
 	 * Test method for {@link com.btechconsulting.wein.cumulus.initialization.Initializer#putJobOnServer(java.lang.String, Integer, Map)}.
 	 */
 	@Test
-	public void testPutJobOnServer() {
+	public synchronized void testPutJobOnServer() {
 		Map<Integer, wUStatus> testJob=  new HashMap<Integer, wUStatus>();
 		testJob.put(1, wUStatus.INFLIGHT);
 		Initializer.INSTANCE.putJobOnServer("0", 0,testJob);
@@ -48,7 +48,7 @@ public class InitializerTest {
 	 * Test method for {@link com.btechconsulting.wein.cumulus.initialization.Initializer#removeJobFromServer(java.lang.String, java.lang.String)}.
 	 */
 	@Test
-	public void testRemoveJobFromServer() {
+	public synchronized void testRemoveJobFromServer() {
 		Map<Integer, wUStatus> testJob=  new HashMap<Integer, wUStatus>();
 		testJob.put(1, wUStatus.INFLIGHT);
 		Map<Integer,Map<Integer,wUStatus>> testUID= new HashMap<Integer, Map<Integer,wUStatus>>();
@@ -62,7 +62,7 @@ public class InitializerTest {
 	 * Test method for {@link com.btechconsulting.wein.cumulus.initialization.Initializer#putWorkUnit(java.lang.String, Integer, Integer, com.btechconsulting.wein.cumulus.initialization.Initializer.wUStatus)}.
 	 */
 	@Test
-	public void testPutWorkUnit() {
+	public synchronized void testPutWorkUnit() {
 		Map<Integer, wUStatus> testJob=  new HashMap<Integer, wUStatus>();
 		Map<Integer,Map<Integer,wUStatus>> testUID= new HashMap<Integer, Map<Integer,wUStatus>>();
 		testUID.put(2,testJob);
@@ -79,7 +79,7 @@ public class InitializerTest {
 	 * Test method for {@link com.btechconsulting.wein.cumulus.initialization.Initializer#getStatusOfWorkUnit(java.lang.String, java.lang.String, java.lang.String)}.
 	 */
 	@Test
-	public void testGetStatusOfWorkUnit() {
+	public synchronized void testGetStatusOfWorkUnit() {
 		Map<Integer, wUStatus> testJob=  new HashMap<Integer, wUStatus>();
 		testJob.put(3, wUStatus.INFLIGHT);
 		Map<Integer,Map<Integer,wUStatus>> testUID= new HashMap<Integer, Map<Integer,wUStatus>>();
@@ -89,7 +89,7 @@ public class InitializerTest {
 	}
 	
 	@Test
-	public void testGetMaxJobID(){
+	public synchronized void testGetMaxJobID(){
 		//test that we behave when the user doesn't yet exist
 		assertEquals(Initializer.INSTANCE.getMaxJobID("this"),(Integer) 0);
 		//test that we behave when the user exists but doesn't have any jobs

@@ -48,21 +48,25 @@ public enum Initializer {
 	private String returnQueue;
 	private AmazonSQSAsync sqsClient;
 	private Marshaller workUnitMarshaller;
+	private PropertiesCredentials credentials;
+	private Thread sqsListener;
 	// units on server is a map of OwnerID to a map of JobID to a map of WorkUnitID to work Unit status
 	// TODO figure out how to get unit testing to work when this is private
 	Map<String, Map<Integer, Map<Integer,wUStatus>>> unitsOnServer;
 
 	private Initializer(){
 		try{
+			//we read credentials once here.  Minimizing reads to the disk
+			credentials=new PropertiesCredentials(
+					new FileInputStream(Constants.credentialsFile));
 			JAXBContext context = JAXBContext.newInstance(WorkUnit.class);
 			workUnitMarshaller = context.createMarshaller();
 			workUnitMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
-			sqsClient = new AmazonSQSAsyncClient(new PropertiesCredentials(
-					new FileInputStream(Constants.credentialsFile)));
+			sqsClient = new AmazonSQSAsyncClient(this.credentials);
 			dispatchQueue = createQueue(sqsClient, Constants.dispatchQueueName);
 			returnQueue = createQueue(sqsClient, Constants.returnQueueName);
 			unitsOnServer= createUnitsOnServer();
-			//createInitialInstances(Constants.credentialsFile);  //TODO change this back, EC2 creation is disabled for testing
+			//createInitialInstances();  //TODO change this back, EC2 creation is disabled for testing
 		}
 		catch (AmazonServiceException ase) {
 			System.err.println("Caught an AmazonServiceException, which means your request made it " +
@@ -86,11 +90,14 @@ public enum Initializer {
 			System.err.println(e);
 		}
 
+		//start the SQSListener
+		sqsListener = new Thread(new SqsListener());
+		sqsListener.start();
+		
 	}
 
-	private void createInitialInstances(String credentialsFile) throws Exception {
-		AmazonEC2 ec2= new AmazonEC2Client(new PropertiesCredentials(
-				new FileInputStream(credentialsFile)));
+	private void createInitialInstances() throws Exception {
+		AmazonEC2 ec2= new AmazonEC2Client(this.credentials);
 		//set the zone
 		ec2.setEndpoint(Constants.ec2Region);
 		System.out.println("Intializing "+Constants.initialInstances+" instances\n");
@@ -130,7 +137,8 @@ public enum Initializer {
 	/**
 	 * 
 	 */
-	public void teardownAll() throws Exception{
+	public void teardownAll(){
+		this.sqsListener.interrupt();
 		sqsClient.deleteQueue(new DeleteQueueRequest(dispatchQueue));
 		sqsClient.deleteQueue(new DeleteQueueRequest(returnQueue));
 		System.out.println("Deleted SQS queues");
@@ -141,8 +149,7 @@ public enum Initializer {
 		// Initialize variables.
 		List<String> instanceIds = new ArrayList<String>();
 		try{
-			AmazonEC2 ec2= new AmazonEC2Client(new PropertiesCredentials(
-					new FileInputStream(Constants.credentialsFile)));
+			AmazonEC2 ec2= new AmazonEC2Client(this.credentials);
 			// get all of the instanceID's.  add them to the list
 			DescribeInstancesResult describeInstancesResult = ec2.describeInstances(describeInstancesRequest);
 			List<Reservation> reservations = describeInstancesResult.getReservations();
@@ -169,7 +176,8 @@ public enum Initializer {
 			System.err.println("Request ID: " + e.getRequestId());
 		} catch (Exception e) {
 			//caught another exception
-			System.err.println(e);		}
+			System.err.println(e);
+			System.err.println("Did not exit cleanly");}
 		System.out.println("Killed all cumulus drones");
 	}
 
@@ -268,6 +276,20 @@ public enum Initializer {
 	 */
 	public void setWorkUnitMarshaller(Marshaller workUnitMarshaller) {
 		this.workUnitMarshaller = workUnitMarshaller;
+	}
+
+	/**
+	 * @return the credentials
+	 */
+	public PropertiesCredentials getCredentials() {
+		return credentials;
+	}
+
+	/**
+	 * @param credentials the credentials to set
+	 */
+	public void setCredentials(PropertiesCredentials credentials) {
+		this.credentials = credentials;
 	}
 
 

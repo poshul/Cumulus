@@ -26,8 +26,8 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
  *         &lt;element name="ownerID" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="jobID" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="workUnitID" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="jobID" type="{http://www.w3.org/2001/XMLSchema}int"/>
+ *         &lt;element name="workUnitID" type="{http://www.w3.org/2001/XMLSchema}int"/>
  *         &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
@@ -49,10 +49,8 @@ public class ReturnUnit {
 
     @XmlElement(required = true)
     protected String ownerID;
-    @XmlElement(required = true)
-    protected String jobID;
-    @XmlElement(required = true)
-    protected String workUnitID;
+    protected int jobID;
+    protected int workUnitID;
     @XmlElement(required = true)
     protected String status;
 
@@ -83,48 +81,32 @@ public class ReturnUnit {
     /**
      * Gets the value of the jobID property.
      * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
      */
-    public String getJobID() {
+    public int getJobID() {
         return jobID;
     }
 
     /**
      * Sets the value of the jobID property.
      * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
      */
-    public void setJobID(String value) {
+    public void setJobID(int value) {
         this.jobID = value;
     }
 
     /**
      * Gets the value of the workUnitID property.
      * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
      */
-    public String getWorkUnitID() {
+    public int getWorkUnitID() {
         return workUnitID;
     }
 
     /**
      * Sets the value of the workUnitID property.
      * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
      */
-    public void setWorkUnitID(String value) {
+    public void setWorkUnitID(int value) {
         this.workUnitID = value;
     }
 

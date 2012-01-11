@@ -30,7 +30,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="ownerID" type="{http://www.w3.org/2001/XMLSchema}string"/>
  *         &lt;element name="jobID" type="{http://www.w3.org/2001/XMLSchema}int"/>
  *         &lt;element name="workUnitID" type="{http://www.w3.org/2001/XMLSchema}int"/>
- *         &lt;element name="vinaParams" type="{http://www.example.org/WorkUnit}VinaParams"/>
+ *         &lt;element name="vinaParams" type="{http://www.b-techconsulting.com/cumulus}VinaParams"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>

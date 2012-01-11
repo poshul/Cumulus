@@ -81,8 +81,7 @@ public class Main {
 		testWorkUnit.setWorkUnitID(workUnitId);
 		try{
 			WorkUnitGenerator.PutWorkUnitInSQS(testWorkUnit);
-			AmazonSQS sqsClient = new AmazonSQSClient(new PropertiesCredentials(
-					new FileInputStream(Constants.credentialsFile)));
+			AmazonSQS sqsClient = new AmazonSQSClient(Initializer.INSTANCE.getCredentials());
 			ReceiveMessageRequest messageRequest= new ReceiveMessageRequest(Initializer.INSTANCE.getDispatchQueue());
 			List<Message> messages= sqsClient.receiveMessage(messageRequest).getMessages();
 			for (Message message : messages) {
