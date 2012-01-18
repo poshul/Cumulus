@@ -3,7 +3,11 @@
  */
 package com.btechconsulting.wein.nimbus;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -19,18 +23,12 @@ import com.btechconsulting.wein.nimbus.model.WorkUnit;
 public class VinaCaller implements Callable<String> {
 	private String moleculeFile;
 	private String receptorFile;
-	private String ownerID;
-	private Integer jobID;
-	private Integer workUnitID;
+
 	private VinaParams vinaParams;
 
-	public VinaCaller(String moleculeFile, String receptorFile, String ownerID,
-			Integer jobID, Integer workUnitID, VinaParams vinaParams) {
+	public VinaCaller(String moleculeFile, String receptorFile, VinaParams vinaParams) {
 		this.moleculeFile = moleculeFile;
 		this.receptorFile = receptorFile;
-		this.ownerID = ownerID;
-		this.jobID = jobID;
-		this.workUnitID = workUnitID;
 		this.vinaParams = vinaParams;
 	}
 	
@@ -81,7 +79,7 @@ public class VinaCaller implements Callable<String> {
 	public String call() throws Exception {
 		List<String> command= new ArrayList<String>();
 		String outLocation=this.moleculeFile+".out";
-		command.add(Constants.vinaLoc);
+		command.add(Constants.VINALOC);
 		command.add("--receptor");
 		command.add(this.receptorFile);
 		command.add("--ligand");
@@ -94,6 +92,14 @@ public class VinaCaller implements Callable<String> {
 		Process process = new ProcessBuilder(command).start();
 		//wait for the process to finish
 		process.waitFor();
+		InputStream is= process.getErrorStream();
+		InputStreamReader isr = new InputStreamReader(is);
+		BufferedReader br = new BufferedReader(isr);
+		String line;
+		while ((line = br.readLine()) != null){
+			System.out.println(line);
+		}//TODO do something about errors found here
+
 		return outLocation;
 	}
 

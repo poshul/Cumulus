@@ -28,7 +28,7 @@ public class VinaCallerTest {
 		vinaParams.setSizeY(6);
 		vinaParams.setSizeZ(7);
 		vinaParams.setExhaustiveness(3);
-		VinaCaller caller = new VinaCaller("/home/samuel/foo", "/home/samuel/bar", "0", 0, 0, vinaParams);
+		VinaCaller caller = new VinaCaller("/home/samuel/foo", "/home/samuel/bar", vinaParams);
 		List<String> decodedParams;
 		decodedParams = caller.DecodeVinaParams();
 		List<String> expectedParams= new ArrayList<>();
@@ -59,7 +59,7 @@ public class VinaCallerTest {
 		vinaParams.setSizeY(22);
 		vinaParams.setSizeZ(22);
 		vinaParams.setExhaustiveness(15);
-		VinaCaller caller = new VinaCaller("src/main/resources/APC.pdbqt", "src/main/resources/1HWKnohet.pdbqt", "0", 0, 0, vinaParams);
+		VinaCaller caller = new VinaCaller("src/main/resources/APC.pdbqt", "src/main/resources/1HWKnohet.pdbqt", vinaParams);
 		String returnString=caller.call();
 		System.out.println(returnString);
 	}
@@ -74,7 +74,7 @@ public class VinaCallerTest {
 		vinaParams.setSizeY(22);
 		vinaParams.setSizeZ(22);
 		vinaParams.setExhaustiveness(15);
-		Callable<String> callable = new VinaCaller("src/main/resources/APC.pdbqt", "src/main/resources/1HWKnohet.pdbqt", "0", 0, 0, vinaParams);
+		Callable<String> callable = new VinaCaller("src/main/resources/APC.pdbqt", "src/main/resources/1HWKnohet.pdbqt", vinaParams);
 		ExecutorService executor = new ScheduledThreadPoolExecutor(1);
 		Future<String> returnString = executor.submit(callable);
 		while (!returnString.isDone()) {
