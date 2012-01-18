@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.example.org/WorkUnit" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" xmlns:Q1="http://www.example.org/WorkUnit">
+<xs:complexType name="WorkUnit">
+<xs:sequence>
+    <xs:element name="pointerToMolecule" type="string"></xs:element>
+
+    <xs:element name="pointerToReceptor" type="string"></xs:element>
+
+    <xs:element name="ownerID" type="string"></xs:element>
+
+    <xs:element name="jobID" type="int"></xs:element>
+    
+    <xs:element name="workUnitID" type="int"></xs:element>
+
+    <xs:element name="vinaParams" type="Q1:VinaParams"></xs:element>
+    </xs:sequence>
+    </xs:complexType>
+    
+    <xs:complexType name="VinaParams">
+    	<xs:sequence>
+    		<xs:element name="center_x" type="float" maxOccurs="1"
+    			minOccurs="1">
+    		</xs:element>
+    		<xs:element name="center_y" type="float" maxOccurs="1"
+    			minOccurs="1">
+    		</xs:element>
+    		<xs:element name="center_z" type="float" maxOccurs="1"
+    			minOccurs="1">
+    		</xs:element>
+    		<xs:element name="size_x" type="int" maxOccurs="1"
+    			minOccurs="1">
+    		</xs:element>
+    		<xs:element name="size_y" type="int" maxOccurs="1"
+    			minOccurs="1">
+    		</xs:element>
+    		<xs:element name="size_z" type="int" maxOccurs="1"
+    			minOccurs="1">
+    		</xs:element>
+    		<xs:element name="exhaustiveness" type="int" maxOccurs="1"
+    			minOccurs="0">
+    		</xs:element>
+    		<xs:element name="seed" type="int" maxOccurs="1"
+    			minOccurs="0">
+    		</xs:element>
+    		<xs:element name="num_modes" type="int" maxOccurs="1"
+    			minOccurs="0">
+    		</xs:element>
+    		<xs:element name="energy_range" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    	</xs:sequence>
+    </xs:complexType>
+
+
+    <xs:complexType name="ReturnUnit">
+    	<xs:sequence>
+    		<xs:element name="ownerID" type="string"></xs:element>
+    		<xs:element name="jobID" type="int"></xs:element>
+    		<xs:element name="workUnitID" type="int"></xs:element>
+    		<xs:element name="status" type="string"></xs:element>
+    	</xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="FilterParams">
+    	<xs:sequence>
+    		<xs:element name="min_mwt" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_mwt" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_logp" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_logp" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_desolv_apolar" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_desolv_apolar" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_desolv_polar" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_desolv_polar" type="float" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_hbd" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+            <xs:element name="max_hbd" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+            <xs:element name="min_hba" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_hba" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_tpsa" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_tpsa" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_charge" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_charge" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_nrb" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="max_nrb" type="int" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="smiles" type="string" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="supplier" type="string" maxOccurs="1" minOccurs="0"></xs:element>
+    		<xs:element name="min_suppliers" type="string" maxOccurs="1" minOccurs="0"></xs:element>
+    	</xs:sequence>
+    </xs:complexType>
+</xs:schema>
