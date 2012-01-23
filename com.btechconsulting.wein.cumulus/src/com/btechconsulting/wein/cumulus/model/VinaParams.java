@@ -25,9 +25,9 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="center_x" type="{http://www.w3.org/2001/XMLSchema}int"/>
- *         &lt;element name="center_y" type="{http://www.w3.org/2001/XMLSchema}int"/>
- *         &lt;element name="center_z" type="{http://www.w3.org/2001/XMLSchema}int"/>
+ *         &lt;element name="center_x" type="{http://www.w3.org/2001/XMLSchema}float"/>
+ *         &lt;element name="center_y" type="{http://www.w3.org/2001/XMLSchema}float"/>
+ *         &lt;element name="center_z" type="{http://www.w3.org/2001/XMLSchema}float"/>
  *         &lt;element name="size_x" type="{http://www.w3.org/2001/XMLSchema}int"/>
  *         &lt;element name="size_y" type="{http://www.w3.org/2001/XMLSchema}int"/>
  *         &lt;element name="size_z" type="{http://www.w3.org/2001/XMLSchema}int"/>
@@ -60,11 +60,11 @@ import javax.xml.bind.annotation.XmlType;
 public class VinaParams {
 
     @XmlElement(name = "center_x")
-    protected int centerX;
+    protected float centerX;
     @XmlElement(name = "center_y")
-    protected int centerY;
+    protected float centerY;
     @XmlElement(name = "center_z")
-    protected int centerZ;
+    protected float centerZ;
     @XmlElement(name = "size_x")
     protected int sizeX;
     @XmlElement(name = "size_y")
@@ -82,7 +82,7 @@ public class VinaParams {
      * Gets the value of the centerX property.
      * 
      */
-    public int getCenterX() {
+    public float getCenterX() {
         return centerX;
     }
 
@@ -90,7 +90,7 @@ public class VinaParams {
      * Sets the value of the centerX property.
      * 
      */
-    public void setCenterX(int value) {
+    public void setCenterX(float value) {
         this.centerX = value;
     }
 
@@ -98,7 +98,7 @@ public class VinaParams {
      * Gets the value of the centerY property.
      * 
      */
-    public int getCenterY() {
+    public float getCenterY() {
         return centerY;
     }
 
@@ -106,7 +106,7 @@ public class VinaParams {
      * Sets the value of the centerY property.
      * 
      */
-    public void setCenterY(int value) {
+    public void setCenterY(float value) {
         this.centerY = value;
     }
 
@@ -114,7 +114,7 @@ public class VinaParams {
      * Gets the value of the centerZ property.
      * 
      */
-    public int getCenterZ() {
+    public float getCenterZ() {
         return centerZ;
     }
 
@@ -122,7 +122,7 @@ public class VinaParams {
      * Sets the value of the centerZ property.
      * 
      */
-    public void setCenterZ(int value) {
+    public void setCenterZ(float value) {
         this.centerZ = value;
     }
 

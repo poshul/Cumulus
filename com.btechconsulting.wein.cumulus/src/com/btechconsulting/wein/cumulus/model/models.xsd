@@ -18,13 +18,13 @@
     
     <xs:complexType name="VinaParams">
     	<xs:sequence>
-    		<xs:element name="center_x" type="int" maxOccurs="1"
+    		<xs:element name="center_x" type="float" maxOccurs="1"
     			minOccurs="1">
     		</xs:element>
-    		<xs:element name="center_y" type="int" maxOccurs="1"
+    		<xs:element name="center_y" type="float" maxOccurs="1"
     			minOccurs="1">
     		</xs:element>
-    		<xs:element name="center_z" type="int" maxOccurs="1"
+    		<xs:element name="center_z" type="float" maxOccurs="1"
     			minOccurs="1">
     		</xs:element>
     		<xs:element name="size_x" type="int" maxOccurs="1"
