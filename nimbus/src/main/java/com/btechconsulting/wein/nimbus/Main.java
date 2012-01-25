@@ -74,7 +74,7 @@ public class Main {
 			//we should never reach here if we do it indicates a flow problem
 			System.exit(2);
 		}
-
+/*
 		Map<String,String> queues= new HashMap<String, String>(); 
 		String dispatchQueue=null;
 		String returnQueue=null;
@@ -95,7 +95,7 @@ public class Main {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		//Get SQS client.
+*/		//Get SQS client.
 		AmazonSQSClient client = new AmazonSQSClient(credentials);
 		
 		//Get SQL connection
