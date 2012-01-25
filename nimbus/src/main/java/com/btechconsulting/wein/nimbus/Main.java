@@ -3,15 +3,25 @@
  */
 package com.btechconsulting.wein.nimbus;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -21,7 +31,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
-import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
@@ -88,13 +97,26 @@ public class Main {
 		}
 		//Get SQS client.
 		AmazonSQSClient client = new AmazonSQSClient(credentials);
+		
+		//Get SQL connection
+		Connection conn=null;
+		Statement stmt=null;
+		try {
+			conn = PooledConnectionFactory.INSTANCE.getCumulusConnection();
+			stmt = conn.createStatement();
+		} catch (SQLException e2) {
+			System.err.println("Couldn't connect to SQL server");
+			e2.printStackTrace();
+			System.exit(1);
+		}
+
+		
 		//Start loop here
 		while (true){
 			//Check dispatch queue for workunit
 			try {
 				Thread.sleep(1000); // This guarantees that we will not query the SQS more than once a second
 			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 				System.err.println("Waiting between requests to sqs was interrupted");
 				System.exit(2);
@@ -126,10 +148,12 @@ public class Main {
 				unMarshalledUnit= UnmarshallWorkUnit(marshalledWorkUnit);
 			}
 			catch (JAXBException e) {
+				System.err.println("Couldn't unmarshall WorkUnit");
 				// TODO: handle exception send error to queue
 			}
 			if (unMarshalledUnit==null){
 				//TODO: handle malformed work unit
+				System.err.println("Unmarshalled work unit is null");
 			}
 			//generate the skeleton of the returnUnit
 			ReturnUnit returnU= new ReturnUnit();
@@ -139,10 +163,66 @@ public class Main {
 			returnU.setStatus("ERROR");//I'd much rather have a return unit incorrectly marked as an error than have a null status
 
 			//get receptor and molecule from sql
-
-			//store receptor and molecule on disk
-			String receptorFileName=""; //TODO fill in this
-			String moleculeFileName=""; //TODO fill in this
+			String receptorQuery= "SELECT pdbqtfile FROM cumulus.receptor WHERE sha256='"+unMarshalledUnit.getPointerToReceptor()+"' AND( owner_id='"+unMarshalledUnit.getOwnerID()+"' "+"OR owner_id='0');";
+			String moleculeQuery= "SELECT pdbqt FROM cumulus.mol_properties WHERE compound_id='"+unMarshalledUnit.getPointerToMolecule()+"' AND( owner_id='"+unMarshalledUnit.getOwnerID()+"' "+"OR owner_id='0');";
+			String receptorString=null;
+			String moleculeString=null;
+			try {
+				ResultSet receptorResults= stmt.executeQuery(receptorQuery);
+				Integer numRResults=0;
+				while (receptorResults.next())
+				{
+					receptorString=receptorResults.getString(1);
+					numRResults++;
+				}
+				ResultSet moleculeResults= stmt.executeQuery(moleculeQuery);
+				Integer numMResults=0;
+				while (moleculeResults.next())
+				{
+					moleculeString=moleculeResults.getString(1);
+					numMResults++;
+				}
+				
+				if (numMResults<1||numRResults<1){
+					System.err.println("Couldn't find either molecule or receptor");
+					//TODO send error here
+				}
+				
+				if (numRResults>1){
+					System.err.println("We had a collision in receptor results");
+					//TODO send error here
+				}
+				
+				if (numMResults>1){
+					System.err.println("We had a collision in molecule results");
+					//TODO send error here
+				}
+				
+			} catch (SQLException e2) {
+				System.err.println("Couldn't retrieve data from SQL");
+				e2.printStackTrace();
+				System.exit(1);
+			}
+			
+			//store receptor and molecule on disk TODO
+			String receptorFileName="/tmp/receptor.pdbqt";
+			String moleculeFileName="/tmp/molecule.pdbqt";
+			File receptorFile= new File(receptorFileName);
+			File moleculeFile= new File(moleculeFileName);
+			try {
+				FileOutputStream receptorOutputStream= new FileOutputStream(receptorFile);
+				FileOutputStream moleculeOutputStream= new FileOutputStream(moleculeFile);
+				PrintWriter rOut= new PrintWriter(receptorOutputStream);
+				PrintWriter mOut= new PrintWriter(moleculeOutputStream);
+				rOut.print(receptorString);
+				mOut.print(moleculeString);
+			} catch (FileNotFoundException e2) {
+				System.err.println("Error creating file");
+				e2.printStackTrace();
+				System.exit(1);
+			}
+			
+			
 			//call vina
 			Callable<String> callable = new VinaCaller(moleculeFileName, receptorFileName, unMarshalledUnit.getVinaParams());
 			ExecutorService executor = new ScheduledThreadPoolExecutor(1);
@@ -150,11 +230,10 @@ public class Main {
 			Long now =System.currentTimeMillis();
 			Boolean retried= false;
 			//we loop while waiting, up to a limit of 15 minutes
-			while (!returnString.isDone()&& System.currentTimeMillis()<=900000) {
+			while (!returnString.isDone()&& System.currentTimeMillis()-now<=900000) {
 				try {
 					Thread.sleep(1000); //check whether we are finished each second.
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					System.err.println("We were interrupted");
 					System.exit(2);
@@ -166,34 +245,103 @@ public class Main {
 				if(retried==false){ //If this is our first try, retry
 					now =System.currentTimeMillis();
 					//we loop while waiting, up to a limit of 15 minutes
-					while (!returnString.isDone()&& System.currentTimeMillis()<=900000) {
+					while (!returnString.isDone()&& System.currentTimeMillis()-now<=900000) {
 						try {
 							Thread.sleep(1000); //check whether we are finished each second.
 						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 							System.err.println("We were interrupted");
 							System.exit(2);
 						}
 					}
 				}
+				//wait for time to expire or vina to return
 				if (!returnString.isDone()){
 					executor.shutdownNow(); // kill ALL the things!
+					returnU.setStatus("ERROR");
+					try {
+						SendStatusToReturnQueue(client, returnQueue, returnU);
+					} catch (JAXBException e) {
+						e.printStackTrace();
+						System.err.println("Problem marshalling return unit");
+						System.exit(1);
+					}
+					DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
+				} 
+			}else {
+
+				try {
+					System.out.println(returnString.get());
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					System.err.println("Execution was interrupted.  This is bad");
+					System.exit(2);
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+					System.err.println("Vina exited abnormally");
+					//try to tell the return queue that we have an error
+					returnU.setStatus("ERROR");
+					try {
+						SendStatusToReturnQueue(client, returnQueue, returnU);
+						DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
+					} catch (JAXBException e1) {
+						e1.printStackTrace();
+						System.err.println("Multiple Internal errors");
+						System.exit(1);
+					}
+					System.exit(1);
 				}
+
+				//load results from disk
+				String results= null;
+				String resultsFileName= moleculeFileName+".out";//location of the outfile is hardcodes in VinaCaller, this is bad TODO fix it
+				File resultsFile = new File(resultsFileName);
+				
+				try {
+					FileReader resultsReader= new FileReader(resultsFile);
+					BufferedReader in = new BufferedReader(resultsReader);
+					String thisline= in.readLine();
+					while(thisline!=null){ //read until we hit the end of the file
+						results=results+thisline;
+						thisline=in.readLine();
+					}
+				} catch (FileNotFoundException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				//put results into sql
+				//FIXME need to redo the results schema
+				String resultsStatement="INSERT INTO cumulus.results (owner_id, job_id, workunit_id, results) VALUE('"+unMarshalledUnit.getOwnerID()+"','"+unMarshalledUnit.getJobID()+"','"+unMarshalledUnit.getWorkUnitID()+"','"+results+"';";
+				try {
+					stmt.executeUpdate(resultsStatement);
+				} catch (SQLException e1) {
+					System.err.println("Couldn't put results into SQL");
+					e1.printStackTrace();
+					System.exit(1);
+				}
+
+				//put results in return queue
+				returnU.setStatus("DONE");
+				try {
+					SendStatusToReturnQueue(client, returnQueue, returnU);
+				} catch (JAXBException e) {
+					e.printStackTrace();
+					System.err.println("Problem marshalling return unit");
+					System.exit(1);
+				}
+				//delete workunit from dispatch queue
+				DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
+
 			}
-			
-			System.out.println(returnString.get());
-
-			//wait for time to expire or vina to return
-
-			//load results from disk and put into SQL
-
-			//put results in return queue
-			//delete workunit from dispatch queue
 		}
 		//end loop
 
 	}
+	
 
 	private static List<Message> GetMessageBundle(String dispatchQueue, AmazonSQSClient client){
 		ReceiveMessageRequest request = new ReceiveMessageRequest(dispatchQueue).withMaxNumberOfMessages(1).withVisibilityTimeout(930);
@@ -208,7 +356,7 @@ public class Main {
 		WorkUnit returnUnit =(WorkUnit) um.unmarshal(new StringReader(workUnit));
 		return returnUnit;
 	}
-	
+
 	private static String MarshallReturnUnit(ReturnUnit returnUnit) throws JAXBException{
 		JAXBContext context = JAXBContext.newInstance(ReturnUnit.class);
 		Marshaller m = context.createMarshaller();
@@ -216,12 +364,13 @@ public class Main {
 		m.marshal(returnUnit, writer);
 		return writer.toString();
 	}
-	
+
 	private static void SendStatusToReturnQueue(AmazonSQSClient client,String returnQueue, ReturnUnit returnUnit) throws JAXBException{
 		String marshalledReturnUnit = MarshallReturnUnit(returnUnit);
 		SendMessageRequest request = new SendMessageRequest(returnQueue, marshalledReturnUnit);
+		client.sendMessage(request);
 	}
-	
+
 	private static void DeleteMessageFromDispatchQueue(AmazonSQSClient client, String dispatchQueue, String receiptHandle){
 		DeleteMessageRequest request = new DeleteMessageRequest(dispatchQueue, receiptHandle);
 		client.deleteMessage(request);
