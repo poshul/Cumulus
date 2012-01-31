@@ -74,7 +74,7 @@ public class Main {
 			//we should never reach here if we do it indicates a flow problem
 			System.exit(2);
 		}
-/*
+		/*
 		Map<String,String> queues= new HashMap<String, String>(); 
 		String dispatchQueue=null;
 		String returnQueue=null;
@@ -94,10 +94,12 @@ public class Main {
 			System.err.println("Internal Error");
 			e.printStackTrace();
 			System.exit(1);
-		}
-*/		//Get SQS client.
+		}*/
+		String dispatchQueue= "https://queue.amazonaws.com/157399895577/dispatchQueue";
+		String returnQueue= "https://queue.amazonaws.com/157399895577/returnQueue";
+		//Get SQS client.
 		AmazonSQSClient client = new AmazonSQSClient(credentials);
-		
+
 		//Get SQL connection
 		Connection conn=null;
 		Statement stmt=null;
@@ -110,7 +112,7 @@ public class Main {
 			System.exit(1);
 		}
 
-		
+
 		//Start loop here
 		while (true){
 			//Check dispatch queue for workunit
@@ -140,6 +142,7 @@ public class Main {
 				System.exit(2);
 			}
 			//Retrieve workunit
+			System.out.println("Got workunit");
 			String receiptHandle= messageList.get(0).getReceiptHandle();
 			String marshalledWorkUnit= messageList.get(0).getBody();
 			//unmarshall workunit
@@ -162,186 +165,225 @@ public class Main {
 			returnU.setWorkUnitID(unMarshalledUnit.getWorkUnitID());
 			returnU.setStatus("ERROR");//I'd much rather have a return unit incorrectly marked as an error than have a null status
 
-			//get receptor and molecule from sql
-			String receptorQuery= "SELECT pdbqtfile FROM cumulus.receptor WHERE sha256='"+unMarshalledUnit.getPointerToReceptor()+"' AND( owner_id='"+unMarshalledUnit.getOwnerID()+"' "+"OR owner_id='0');";
-			String moleculeQuery= "SELECT pdbqt FROM cumulus.mol_properties WHERE compound_id='"+unMarshalledUnit.getPointerToMolecule()+"' AND( owner_id='"+unMarshalledUnit.getOwnerID()+"' "+"OR owner_id='0');";
-			String receptorString=null;
-			String moleculeString=null;
+			//Check to make sure that we haven't already done this calculation;
+			String queryStatement="SELECT count(*) FROM cumulus.results WHERE owner_id='"+unMarshalledUnit.getOwnerID()+"' and job_id='"+unMarshalledUnit.getJobID()+"' and workunit_id='"+unMarshalledUnit.getWorkUnitID()+"';";
+			Integer numResults=null;
+
+			ResultSet duplicateResults;
 			try {
-				ResultSet receptorResults= stmt.executeQuery(receptorQuery);
-				Integer numRResults=0;
-				while (receptorResults.next())
+				duplicateResults = stmt.executeQuery(queryStatement);
+				while (duplicateResults.next())
 				{
-					receptorString=receptorResults.getString(1);
-					numRResults++;
+					numResults=duplicateResults.getInt(1);
 				}
-				ResultSet moleculeResults= stmt.executeQuery(moleculeQuery);
-				Integer numMResults=0;
-				while (moleculeResults.next())
-				{
-					moleculeString=moleculeResults.getString(1);
-					numMResults++;
-				}
-				
-				if (numMResults<1||numRResults<1){
-					System.err.println("Couldn't find either molecule or receptor");
-					//TODO send error here
-				}
-				
-				if (numRResults>1){
-					System.err.println("We had a collision in receptor results");
-					//TODO send error here
-				}
-				
-				if (numMResults>1){
-					System.err.println("We had a collision in molecule results");
-					//TODO send error here
-				}
-				
-			} catch (SQLException e2) {
-				System.err.println("Couldn't retrieve data from SQL");
-				e2.printStackTrace();
+			} catch (SQLException e3) {
+				System.err.println("couldn't check on duplicate status");
+				e3.printStackTrace();
+				//if we can't get duplicate status die
 				System.exit(1);
 			}
-			
-			//store receptor and molecule on disk TODO
-			String receptorFileName="/tmp/receptor.pdbqt";
-			String moleculeFileName="/tmp/molecule.pdbqt";
-			File receptorFile= new File(receptorFileName);
-			File moleculeFile= new File(moleculeFileName);
-			try {
-				FileOutputStream receptorOutputStream= new FileOutputStream(receptorFile);
-				FileOutputStream moleculeOutputStream= new FileOutputStream(moleculeFile);
-				PrintWriter rOut= new PrintWriter(receptorOutputStream);
-				PrintWriter mOut= new PrintWriter(moleculeOutputStream);
-				rOut.print(receptorString);
-				mOut.print(moleculeString);
-			} catch (FileNotFoundException e2) {
-				System.err.println("Error creating file");
-				e2.printStackTrace();
-				System.exit(1);
-			}
-			
-			
-			//call vina
-			Callable<String> callable = new VinaCaller(moleculeFileName, receptorFileName, unMarshalledUnit.getVinaParams());
-			ExecutorService executor = new ScheduledThreadPoolExecutor(1);
-			Future<String> returnString = executor.submit(callable);
-			Long now =System.currentTimeMillis();
-			Boolean retried= false;
-			//we loop while waiting, up to a limit of 15 minutes
-			while (!returnString.isDone()&& System.currentTimeMillis()-now<=900000) {
+			if (numResults==0){
+				//get receptor and molecule from sql
+				String receptorQuery= "SELECT pdbqtfile FROM cumulus.receptor WHERE sha256='"+unMarshalledUnit.getPointerToReceptor()+"' AND( owner_id='"+unMarshalledUnit.getOwnerID()+"' "+"OR owner_id='0');";
+				String moleculeQuery= "SELECT pdbqt FROM cumulus.mol_properties WHERE compound_id='"+unMarshalledUnit.getPointerToMolecule()+"' AND( owner_id='"+unMarshalledUnit.getOwnerID()+"' "+"OR owner_id='0');";
+				//System.out.println(moleculeQuery);
+				String receptorString=null;
+				String moleculeString=null;
 				try {
-					Thread.sleep(1000); //check whether we are finished each second.
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					System.err.println("We were interrupted");
-					System.exit(2);
+					ResultSet receptorResults= stmt.executeQuery(receptorQuery);
+					Integer numRResults=0;
+					while (receptorResults.next())
+					{
+						receptorString=receptorResults.getString(1);
+						numRResults++;
+					}
+					ResultSet moleculeResults= stmt.executeQuery(moleculeQuery);
+					Integer numMResults=0;
+					while (moleculeResults.next())//TODO deal with blank molecule results
+					{
+						moleculeString=moleculeResults.getString(1);
+						numMResults++;
+					}
+
+					if (numMResults<1||numRResults<1){
+						System.err.println("Couldn't find either molecule or receptor");
+						//TODO send error here
+					}
+
+					if (numRResults>1){
+						System.err.println("We had a collision in receptor results");
+						//TODO send error here
+					}
+
+					if (numMResults>1){
+						System.err.println("We had a collision in molecule results");
+						//TODO send error here
+					}
+
+				} catch (SQLException e2) {
+					System.err.println("Couldn't retrieve data from SQL");
+					e2.printStackTrace();
+					System.exit(1);
 				}
-			}
-			//check to see whether we finished.
-			if (!returnString.isDone()){ //TODO refactor this into a loop, it is currently sloppy
-				//if we haven't finished.
-				if(retried==false){ //If this is our first try, retry
-					now =System.currentTimeMillis();
-					//we loop while waiting, up to a limit of 15 minutes
-					while (!returnString.isDone()&& System.currentTimeMillis()-now<=900000) {
-						try {
-							Thread.sleep(1000); //check whether we are finished each second.
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-							System.err.println("We were interrupted");
-							System.exit(2);
-						}
+
+				//store receptor and molecule on disk TODO
+				String receptorFileName="/tmp/receptor.pdbqt";
+				String moleculeFileName="/tmp/molecule.pdbqt";
+				File receptorFile= new File(receptorFileName);
+				File moleculeFile= new File(moleculeFileName);
+				try {
+					FileOutputStream receptorOutputStream= new FileOutputStream(receptorFile);
+					FileOutputStream moleculeOutputStream= new FileOutputStream(moleculeFile);
+					PrintWriter rOut= new PrintWriter(receptorOutputStream);
+					PrintWriter mOut= new PrintWriter(moleculeOutputStream);
+					rOut.print(receptorString);
+					mOut.print(moleculeString);
+					mOut.close();
+					rOut.close();
+				} catch (FileNotFoundException e2) {
+					System.err.println("Error creating file");
+					e2.printStackTrace();
+					System.exit(1);
+				}
+
+
+				//call vina
+				Callable<String> callable = new VinaCaller(moleculeFileName, receptorFileName, unMarshalledUnit.getVinaParams());
+				ExecutorService executor = new ScheduledThreadPoolExecutor(1);
+				Future<String> returnString = executor.submit(callable);
+				Long now =System.currentTimeMillis();
+				Boolean retried= false;
+				//we loop while waiting, up to a limit of 15 minutes
+				while (!returnString.isDone()&& System.currentTimeMillis()-now<=900000) {
+					try {
+						Thread.sleep(1000); //check whether we are finished each second.
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+						System.err.println("We were interrupted");
+						System.exit(2);
 					}
 				}
-				//wait for time to expire or vina to return
-				if (!returnString.isDone()){
-					executor.shutdownNow(); // kill ALL the things!
-					returnU.setStatus("ERROR");
+				//check to see whether we finished.
+				if (!returnString.isDone()){ //TODO refactor this into a loop, it is currently sloppy
+					//if we haven't finished.
+					if(retried==false){ //If this is our first try, retry
+						now =System.currentTimeMillis();
+						//we loop while waiting, up to a limit of 15 minutes
+						while (!returnString.isDone()&& System.currentTimeMillis()-now<=900000) {
+							try {
+								Thread.sleep(1000); //check whether we are finished each second.
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+								System.err.println("We were interrupted");
+								System.exit(2);
+							}
+						}
+					}
+					//wait for time to expire or vina to return
+					if (!returnString.isDone()){
+						executor.shutdownNow(); // kill ALL the things!
+						returnU.setStatus("ERROR");
+						try {
+							SendStatusToReturnQueue(client, returnQueue, returnU);
+						} catch (JAXBException e) {
+							e.printStackTrace();
+							System.err.println("Problem marshalling return unit");
+							System.exit(1);
+						}
+						DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
+					} 
+				}else {
+
+					try {
+						System.out.println(returnString.get());
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+						System.err.println("Execution was interrupted.  This is bad");
+						System.exit(2);
+					} catch (ExecutionException e) {
+						e.printStackTrace();
+						System.err.println("Vina exited abnormally");
+						//try to tell the return queue that we have an error
+						returnU.setStatus("ERROR");
+						try {
+							SendStatusToReturnQueue(client, returnQueue, returnU);
+							DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
+						} catch (JAXBException e1) {
+							e1.printStackTrace();
+							System.err.println("Multiple Internal errors");
+							System.exit(1);
+						}
+						System.exit(1);
+					}
+
+
+					//load results from disk
+					String results= null;
+					String resultsFileName= moleculeFileName+".out";//location of the outfile is hardcodes in VinaCaller, this is bad TODO fix it
+					File resultsFile = new File(resultsFileName);
+
+					try {
+						FileReader resultsReader= new FileReader(resultsFile);
+						BufferedReader in = new BufferedReader(resultsReader);
+						String thisline= in.readLine();
+						while(thisline!=null){ //read until we hit the end of the file
+							results=results+thisline;
+							thisline=in.readLine();
+						}
+					} catch (FileNotFoundException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} catch (IOException ioe) {
+						// TODO Auto-generated catch block
+						ioe.printStackTrace();
+					}
+					if (results==null){
+						results="No confirmations were found with submitted parameters";
+					}
+
+					//put results into sql
+					String resultsStatement="INSERT INTO cumulus.results (owner_id, job_id, workunit_id, results) VALUE('"+unMarshalledUnit.getOwnerID()+"','"+unMarshalledUnit.getJobID()+"','"+unMarshalledUnit.getWorkUnitID()+"','"+results+"');";
+					System.out.println(resultsStatement);
+					try {
+
+						stmt.executeUpdate(resultsStatement);
+
+					} catch (SQLException e1) {
+						System.err.println("Couldn't put results into SQL");//TODO deal with duplicate key problems
+						e1.printStackTrace();
+						System.exit(1);
+					}
+
+					//put results in return queue
+					returnU.setStatus("DONE");
 					try {
 						SendStatusToReturnQueue(client, returnQueue, returnU);
-					} catch (JAXBException e) {
-						e.printStackTrace();
+					} catch (JAXBException jbe) {
+						jbe.printStackTrace();
 						System.err.println("Problem marshalling return unit");
 						System.exit(1);
 					}
+					//delete workunit from dispatch queue
 					DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
-				} 
-			}else {
-
-				try {
-					System.out.println(returnString.get());
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					System.err.println("Execution was interrupted.  This is bad");
-					System.exit(2);
-				} catch (ExecutionException e) {
-					e.printStackTrace();
-					System.err.println("Vina exited abnormally");
-					//try to tell the return queue that we have an error
-					returnU.setStatus("ERROR");
-					try {
-						SendStatusToReturnQueue(client, returnQueue, returnU);
-						DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
-					} catch (JAXBException e1) {
-						e1.printStackTrace();
-						System.err.println("Multiple Internal errors");
-						System.exit(1);
-					}
-					System.exit(1);
 				}
-
-				//load results from disk
-				String results= null;
-				String resultsFileName= moleculeFileName+".out";//location of the outfile is hardcodes in VinaCaller, this is bad TODO fix it
-				File resultsFile = new File(resultsFileName);
-				
-				try {
-					FileReader resultsReader= new FileReader(resultsFile);
-					BufferedReader in = new BufferedReader(resultsReader);
-					String thisline= in.readLine();
-					while(thisline!=null){ //read until we hit the end of the file
-						results=results+thisline;
-						thisline=in.readLine();
-					}
-				} catch (FileNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				//put results into sql
-				//FIXME need to redo the results schema
-				String resultsStatement="INSERT INTO cumulus.results (owner_id, job_id, workunit_id, results) VALUE('"+unMarshalledUnit.getOwnerID()+"','"+unMarshalledUnit.getJobID()+"','"+unMarshalledUnit.getWorkUnitID()+"','"+results+"';";
-				try {
-					stmt.executeUpdate(resultsStatement);
-				} catch (SQLException e1) {
-					System.err.println("Couldn't put results into SQL");
-					e1.printStackTrace();
-					System.exit(1);
-				}
-
-				//put results in return queue
+			}else{ //this can happen with SQS so we need to accept duplicate processing, in this case we trust the earlier computation
+				System.err.println("Result is already in database");
 				returnU.setStatus("DONE");
 				try {
 					SendStatusToReturnQueue(client, returnQueue, returnU);
-				} catch (JAXBException e) {
-					e.printStackTrace();
+				} catch (JAXBException jbe) {
+					jbe.printStackTrace();
 					System.err.println("Problem marshalling return unit");
 					System.exit(1);
 				}
 				//delete workunit from dispatch queue
 				DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
-
 			}
 		}
 		//end loop
 
 	}
-	
+
 
 	private static List<Message> GetMessageBundle(String dispatchQueue, AmazonSQSClient client){
 		ReceiveMessageRequest request = new ReceiveMessageRequest(dispatchQueue).withMaxNumberOfMessages(1).withVisibilityTimeout(930);

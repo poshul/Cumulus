@@ -90,12 +90,21 @@ public class VinaCaller implements Callable<String> {
 		Process process = new ProcessBuilder(command).start();
 		//wait for the process to finish
 		process.waitFor();
-		InputStream is= process.getErrorStream();
+		InputStream es= process.getErrorStream();
+		InputStreamReader esr = new InputStreamReader(es);
+		BufferedReader ebr = new BufferedReader(esr);
+		InputStream is= process.getInputStream();
 		InputStreamReader isr = new InputStreamReader(is);
-		BufferedReader br = new BufferedReader(isr);
-		String line;
-		while ((line = br.readLine()) != null){
-			System.out.println(line);
+		BufferedReader ibr = new BufferedReader(isr);
+		String line=null;
+		String line2=null;
+		while ( (line = ebr.readLine()) != null || (line2= ibr.readLine()) != null ){
+			if(line!=null){
+				System.out.println(line);
+			}
+			if(line2!=null){
+				System.out.println(line2);
+			}
 		}//TODO do something about errors found here
 
 		return outLocation;
