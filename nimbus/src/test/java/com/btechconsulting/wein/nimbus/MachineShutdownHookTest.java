@@ -8,7 +8,6 @@ import org.junit.Test;
 public class MachineShutdownHookTest {
 
 
-	@Test
 	public void TestRun() {
 		Thread t = new Thread(new MachineShutdownHook());
 }

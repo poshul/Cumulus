@@ -54,13 +54,12 @@ public class Main {
 	public static void main(String[] args) {
 		//TODO write shutdown hook here.
 
-		//open sql connection
-
 		//Get the queue names
 		PropertiesCredentials credentials = null;
 		try {
 			credentials=new PropertiesCredentials(
-					new FileInputStream(Constants.CREDENTIALSFILE));
+					Main.class.getResourceAsStream(Constants.CREDENTIALSFILE));
+					//new FileInputStream(Constants.CREDENTIALSFILE));
 		} catch (FileNotFoundException e1) {
 			System.err.println("Error reading credentials file");
 			e1.printStackTrace();
@@ -150,14 +149,17 @@ public class Main {
 			try{
 				unMarshalledUnit= UnmarshallWorkUnit(marshalledWorkUnit);
 			}
+			
 			catch (JAXBException e) {
 				System.err.println("Couldn't unmarshall WorkUnit");
 				// TODO: handle exception send error to queue
 			}
+
 			if (unMarshalledUnit==null){
 				//TODO: handle malformed work unit
 				System.err.println("Unmarshalled work unit is null");
 			}
+
 			//generate the skeleton of the returnUnit
 			ReturnUnit returnU= new ReturnUnit();
 			returnU.setJobID(unMarshalledUnit.getJobID());
@@ -165,6 +167,7 @@ public class Main {
 			returnU.setWorkUnitID(unMarshalledUnit.getWorkUnitID());
 			returnU.setStatus("ERROR");//I'd much rather have a return unit incorrectly marked as an error than have a null status
 
+			
 			//Check to make sure that we haven't already done this calculation;
 			String queryStatement="SELECT count(*) FROM cumulus.results WHERE owner_id='"+unMarshalledUnit.getOwnerID()+"' and job_id='"+unMarshalledUnit.getJobID()+"' and workunit_id='"+unMarshalledUnit.getWorkUnitID()+"';";
 			Integer numResults=null;
