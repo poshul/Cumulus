@@ -31,6 +31,7 @@ public class DoSearchHandler implements RestHandler {
 	public static final String VINAPARAMS="vinaParams";
 	public static final String RECEPTOR="receptor";
 	public static final String FILTERPARAMS="filterParams";
+	public static final String JOBID="jobId";
 	private final Logger logger= Logger.getLogger(DoSearchHandler.class);
 	
 
@@ -94,7 +95,8 @@ public class DoSearchHandler implements RestHandler {
 		}
 		
 		try {
-			WorkUnitGenerator.BuildJob(receptor, ownerId, vinaParamsObj, filterParamsObj);
+			Integer jobId= WorkUnitGenerator.BuildJob(receptor, ownerId, vinaParamsObj, filterParamsObj);
+			response.addIntHeader(JOBID, jobId);
 			//TODO return number of units created to 
 		} catch (AmazonServiceException ase) {
 			logger.error(ase);

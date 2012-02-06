@@ -107,6 +107,23 @@ public class InitializerTest {
 		Initializer.INSTANCE.unitsOnServer.put("6", testUID );
 		assertEquals(Initializer.INSTANCE.getMaxJobID("6"),(Integer) 6);
 	}
+	
+	@Test(expected=IllegalStateException.class)
+	public void testGetNumberOfWorkUnitsInFlight(){
+		//test proper handling before we put anything on the server
+		assertEquals((Integer) 0, Initializer.INSTANCE.getNumberOfWorkUnitsInFlight("a", 0));
+	}
+	
+	@Test
+	public void testGetNumberOfWorkUnitsInFlight2(){
+		Map<Integer, wUStatus> testJob=  new HashMap<Integer, wUStatus>();
+		Map<Integer,Map<Integer,wUStatus>> testUID= new HashMap<Integer, Map<Integer,wUStatus>>();
+		testUID.put(2,testJob);
+		Initializer.INSTANCE.unitsOnServer.put("10", testUID );
+		Initializer.INSTANCE.putWorkUnit("10", 2, 2, wUStatus.INFLIGHT);
+		//test whether we count right
+		assertEquals((Integer) 1, Initializer.INSTANCE.getNumberOfWorkUnitsInFlight("10", 2));
+	}
 
 	/**
 	 * Test method for {@link com.btechconsulting.wein.cumulus.initialization.Initializer#getDispatchQueue()}.

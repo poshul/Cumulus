@@ -81,11 +81,17 @@ public class DetermineWorkToDo {
 		List<String> resultstring= new ArrayList<String>();
 		String query="";
 		// we use the non merging statement if we don't need to specify suppliers 
-		if (this.filterParams.getSupplier()!=null && this.filterParams.getMinSuppliers()!=null){
-			query="SELECT distinct(mol_properties.compound_id) FROM cumulus.mol_properties, cumulus.supplier_properties WHERE mol_properties.owner_id=\""+this.ownerId+"\" OR mol_properties.owner_id=0 AND supplier_properties.owner_id=\""+this.ownerId+"\" OR supplier_properties.owner_id=\"0\" AND mol_properties.compound_id=supplier_properties.compound_id ";
+		if (this.filterParams.getSupplier()!=null || this.filterParams.getMinSuppliers()!=null){
+			query="SELECT distinct(mol_properties.compound_id) FROM cumulus.mol_properties, cumulus.supplier_properties WHERE (mol_properties.owner_id=\""+this.ownerId+"\" OR mol_properties.owner_id='0') AND (supplier_properties.owner_id=\""+this.ownerId+"\" OR supplier_properties.owner_id='0') AND mol_properties.compound_id=supplier_properties.compound_id ";
+			if (this.filterParams.getSupplier()!=null){
+				query=query.concat(" and supplier_properties.supplier="+this.filterParams.getSupplier());  //TODO doublecheck this
+			}
+/*			if (this.filterParams.getMinSuppliers()!=null){
+				query=query.concat(" and cumulus.supplier_properties.count(distinct(supplier)>="+this.filterParams.getMinSuppliers());
+			}*///FIXME
 		}
 		else{
-			query="SELECT distinct(mol_properties.compound_id) FROM cumulus.mol_properties WHERE mol_properties.owner_id=\""+this.ownerId+"\" OR mol_properties.owner_id=\"0\"";
+			query="SELECT distinct(mol_properties.compound_id) FROM cumulus.mol_properties WHERE (mol_properties.owner_id=\""+this.ownerId+"\" OR mol_properties.owner_id=\"0\")";
 		}
 		// TODO This block is sloppy.
 		if (this.filterParams.getMinMwt()!=null){
@@ -144,9 +150,6 @@ public class DetermineWorkToDo {
 		} else {
 			query=query.concat(" and mol_properties.nrb<=10"); // this block prevents massive compounds from being loaded, regardless of what the user says
 		}
-		if (this.filterParams.getSupplier()!=null){
-			query=query.concat(" and supplier_properties.supplier="+this.filterParams.getSupplier());  //TODO doublecheck this
-		}
 		Statement stmt = this.conn.createStatement();
 		ResultSet results= stmt.executeQuery(query);
 		while(results.next()){
@@ -163,10 +166,13 @@ public class DetermineWorkToDo {
 	 */
 	public static void main(String[] args) {
 		try {
-			DetermineWorkToDo newwork= new DetermineWorkToDo("blah","0",new FilterParams());
+			FilterParams filter =new FilterParams();
+			filter.setMaxNrb(0);
+			DetermineWorkToDo newwork= new DetermineWorkToDo("blah","0",filter);
 			newwork.PutReceptorInDatabase();
 			List<String> ids= newwork.FilterCompoundsInDatabase();
-			System.out.println(ids);
+			WorkUnitGenerator generator = new WorkUnitGenerator();
+			//System.out.println(ids);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

@@ -51,13 +51,14 @@ class SqsListener implements Runnable {
 					System.err.println("Malformed unit:"+marshalledResult);
 					continue;
 				}
-				Initializer.INSTANCE.putWorkUnit(unMarshalledResult.getOwnerID(), unMarshalledResult.getJobID(), unMarshalledResult.getWorkUnitID(),Initializer.wUStatus.valueOf(unMarshalledResult.getStatus()));
+				Initializer.INSTANCE.putWorkUnit(unMarshalledResult.getOwnerID(), unMarshalledResult.getJobID(), unMarshalledResult.getWorkUnitID(),Initializer.wUStatus.valueOf(unMarshalledResult.getStatus()));//FIXME we get a null pointer exception here
 				System.out.println("got unit from queue");				
 			}
 			DeleteMessageBatchRequest deleteRequests=new DeleteMessageBatchRequest(Initializer.INSTANCE.getReturnQueue(), deleteList);
 			//after we have read the messages we delete them
-			sqsClient.deleteMessageBatch(deleteRequests);
-
+			if (deleteList.size()>0){ // we can only delete if we have request of things to delete
+				sqsClient.deleteMessageBatch(deleteRequests);
+			}
 			try {
 				Thread.sleep(1000); // this prevents us from polling constantly, running up a huge bill
 			} catch (InterruptedException e) {

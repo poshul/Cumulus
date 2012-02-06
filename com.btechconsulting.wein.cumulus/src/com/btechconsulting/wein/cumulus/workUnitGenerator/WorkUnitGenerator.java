@@ -65,12 +65,12 @@ public class WorkUnitGenerator {
 			Initializer.INSTANCE.putWorkUnit(ownerID, jobID, Integer.getInteger(entry.getId()), wUStatus.INFLIGHT);//TODO this needs to be atomic with the actual adding of the unit to sqs
 			workUnitId++;
 			iter++;
-			System.out.println(workUnitId); //TODO remove this
+			//System.out.println(workUnitId); //TODO remove this
 			if (iter>=10){
 				SendMessageBatchRequest request= new SendMessageBatchRequest(Initializer.INSTANCE.getDispatchQueue(), batch);
 				//futures.add(Initializer.INSTANCE.getSqsClient().sendMessageBatchAsync(request));
 				Initializer.INSTANCE.getSqsClient().sendMessageBatch(request);
-				System.out.println("batch sent");
+				//System.out.println("batch sent");
 				iter=0;
 				batch.removeAll(batch);
 			}
@@ -128,6 +128,15 @@ public class WorkUnitGenerator {
 		/*AmazonSQSAsync sqsClient = Initializer.INSTANCE.getSqsClient();
 		sqsClient.sendMessageAsync(new SendMessageRequest(Initializer.INSTANCE.getDispatchQueue(),marshalledUnit));*/
 		return entry;
+	}
+	
+	//this is largely for testing, it allows the sending of an individual workUnit to the server
+	public static void PutWorkUnitOnServer(WorkUnit workUnit) throws AmazonServiceException, InternalError, AmazonClientException, FileNotFoundException, JAXBException, IOException{
+		List<SendMessageBatchRequestEntry> batch=new ArrayList<SendMessageBatchRequestEntry>();
+		SendMessageBatchRequestEntry entry= putWorkUnitInSQSBatch(workUnit);
+		batch.add(entry);
+		SendMessageBatchRequest batchRequest= new SendMessageBatchRequest(Initializer.INSTANCE.getDispatchQueue(), batch);
+		Initializer.INSTANCE.getSqsClient().sendMessageBatch(batchRequest);
 	}
 
 

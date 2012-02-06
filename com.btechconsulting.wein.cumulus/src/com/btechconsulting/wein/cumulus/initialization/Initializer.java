@@ -11,6 +11,8 @@ import java.util.Map;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
+import org.eclipse.jdt.internal.core.index.impl.Int;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.PropertiesCredentials;
@@ -94,7 +96,7 @@ public enum Initializer {
 		//start the SQSListener
 		sqsListener = new Thread(new SqsListener());
 		sqsListener.start();
-		
+
 	}
 
 	private void createInitialInstances() throws Exception {
@@ -113,15 +115,15 @@ public enum Initializer {
 
 		RunInstancesResult runInstances = ec2.runInstances(runInstancesRequest);
 		System.out.println(runInstances.toString());
-		
+
 		//tag the instances with the dispatch and return queues
 		List<Instance> instances = runInstances.getReservation().getInstances();
 		for (Instance instance : instances) {
-		  CreateTagsRequest createTagsRequest = new CreateTagsRequest();
-		  createTagsRequest.withResources(instance.getInstanceId()) //
-		      .withTags(new Tag("dispatch", this.dispatchQueue))
-		      .withTags(new Tag("return", this.returnQueue));
-		  ec2.createTags(createTagsRequest);
+			CreateTagsRequest createTagsRequest = new CreateTagsRequest();
+			createTagsRequest.withResources(instance.getInstanceId()) //
+			.withTags(new Tag("dispatch", this.dispatchQueue))
+			.withTags(new Tag("return", this.returnQueue));
+			ec2.createTags(createTagsRequest);
 		}
 	}
 
@@ -251,6 +253,22 @@ public enum Initializer {
 			return Collections.max(this.unitsOnServer.get(userID).keySet());
 		}else{
 			return 0;
+		}
+	}
+
+	public synchronized Integer getNumberOfWorkUnitsInFlight(String userID, Integer jobID) throws IllegalStateException{
+		try{
+			Map<Integer,wUStatus> job= this.unitsOnServer.get(userID).get(jobID);
+			Integer numInFlight=0;
+			for (Integer i : job.keySet()) {
+				if (job.get(i).equals(wUStatus.INFLIGHT)){
+					numInFlight++;
+				}
+			}
+			return numInFlight;
+		}
+		catch(NullPointerException npe){
+			throw (new IllegalStateException("specified job and/or user does not exist"));
 		}
 	}
 
