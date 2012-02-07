@@ -12,20 +12,25 @@
   <servlet>
     <servlet-name>RestServlet</servlet-name>
     <servlet-class>com.btechconsulting.wein.cumulus.web.rest.RestServlet</servlet-class>
+    
+    <init-param>
+    	<param-name>config</param-name>
+    	<param-value>/WEB-INF/rest-config.properties</param-value>
+    </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>
   <servlet-mapping>
     <servlet-name>RestServlet</servlet-name>
     <url-pattern>/rest/*</url-pattern>
   </servlet-mapping>
-  <servlet>
+<!--   <servlet>
     <description>JAX-RS Tools Generated - Do not modify</description>
     <servlet-name>JAX-RS Servlet</servlet-name>
     <servlet-class>com.btechconsulting.wein.cumulus.web.rest.RestServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
-  </servlet>
-  <servlet-mapping>
+  </servlet> -->
+  <!-- <servlet-mapping>
     <servlet-name>JAX-RS Servlet</servlet-name>
     <url-pattern>/jaxrs/*</url-pattern>
-  </servlet-mapping>
+  </servlet-mapping> -->
 </web-app>

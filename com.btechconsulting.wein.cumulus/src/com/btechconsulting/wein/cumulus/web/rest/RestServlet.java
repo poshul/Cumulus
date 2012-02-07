@@ -3,6 +3,8 @@ package com.btechconsulting.wein.cumulus.web.rest;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
+
+import org.apache.bcel.generic.NEW;
 import org.apache.log4j.Logger; 
 
 import javax.servlet.ServletConfig;
@@ -19,7 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class RestServlet extends HttpServlet{
 
-	private static Properties props = null;
+	private static Properties props = null; //TODO this is temporary, we can load aws creds and constants here (probably) if we want
 	private static final String CONFIG_INIT_PARAM ="config";
 	private static Logger logger = Logger.getLogger(RestServlet.class);
 	public static final int MAX_NUMBER_TO_SEARCH = 1;

@@ -10,6 +10,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 
+import com.btechconsulting.wein.cumulus.initialization.Initializer;
+
 /**
  * @author samuel
  *
@@ -41,12 +43,22 @@ public class DoReturnResultsHandler implements RestHandler {
 			logger.debug("User didn't supply an jobID");
 			throw new ServletException("You must supply a jobID");
 		}
-		String jobId=jobIds[0];
-		
-		
-				
-		
-		
+		Integer jobId=Integer.valueOf(jobIds[0]);//TODO handle parse exception here
+		Boolean isDone=false;
+		try{
+			if(Initializer.INSTANCE.getNumberOfWorkUnitsInFlight(ownerId, jobId)==0){
+				isDone=true;
+			}
+		}
+		catch(IllegalStateException ise){
+			throw (new ServletException(ise.getMessage()));
+		}
+		//only proceed if we are done
+		if (isDone){
+			response
+		}else{
+			throw (new ServletException("Job is not finished yet"));
+		}
 	}
 
 }
