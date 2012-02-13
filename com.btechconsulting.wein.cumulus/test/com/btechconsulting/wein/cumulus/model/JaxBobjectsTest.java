@@ -34,10 +34,15 @@ public class JaxBobjectsTest {
 		// Create jaxb context and instantiate marshaller
 		try {
 			JAXBContext context = JAXBContext.newInstance(VinaParams.class);
+			JAXBContext context2 = JAXBContext.newInstance(FilterParams.class);
+			Marshaller m2= context2.createMarshaller();
 			Marshaller m = context.createMarshaller();
+			FilterParams filters=new FilterParams();
 			System.out.println("Testing Marshaller\n");
 			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+			m2.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 			m.marshal(params, System.out);
+			m2.marshal(filters, System.out);
 			System.out.println("Testing UnMarshaller\n");
 			Unmarshaller um = context.createUnmarshaller();
 			VinaParams inParams = (VinaParams) um.unmarshal(new FileReader(TEST_XML));

@@ -7,6 +7,8 @@ import java.util.Properties;
 import org.apache.bcel.generic.NEW;
 import org.apache.log4j.Logger; 
 
+import com.btechconsulting.wein.cumulus.initialization.Initializer;
+
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -21,8 +23,9 @@ import javax.servlet.http.HttpServletResponse;
 
 public class RestServlet extends HttpServlet{
 
-	private static Properties props = null; //TODO this is temporary, we can load aws creds and constants here (probably) if we want
+	private static Properties props = null;
 	private static final String CONFIG_INIT_PARAM ="config";
+	private static final String CREDENTIALS_PARAM = "credentials";
 	private static Logger logger = Logger.getLogger(RestServlet.class);
 	public static final int MAX_NUMBER_TO_SEARCH = 1;
 
@@ -32,7 +35,7 @@ public class RestServlet extends HttpServlet{
 		if (props == null){
 
 			String configFile = servletConfig.getInitParameter(CONFIG_INIT_PARAM);
-
+			String credentialsFile= servletConfig.getInitParameter(CREDENTIALS_PARAM);
 			if (configFile != null){
 				try {
 					URL url = getServletContext().getResource(configFile);
@@ -61,6 +64,8 @@ public class RestServlet extends HttpServlet{
 			} else {
 				throw new ServletException("No configuration file specified for RestServlet");
 			}
+			
+			Initializer(servletConfig);//load the Initializer class into memory
 
 		} 
 	}

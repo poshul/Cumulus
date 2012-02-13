@@ -33,16 +33,13 @@ public class DoSearchHandler implements RestHandler {
 	public static final String FILTERPARAMS="filterParams";
 	public static final String JOBID="jobId";
 	private final Logger logger= Logger.getLogger(DoSearchHandler.class);
-	
-
-
 	public void executeSearch(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 		//parse input to make sure it is compliant with spec.
 		String[] ownerIds= request.getParameterValues(OWNERID);
 		if (ownerIds==null|| ownerIds.length!=1){
-			logger.debug("User didn't supply an ownerID");
-			throw new ServletException("You must supply an ownerID");
+			logger.debug("User didn't supply an ownerId");
+			throw new ServletException("You must supply an ownerId");
 		}
 		String ownerId=ownerIds[0];
 		

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletConfig;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
@@ -57,6 +58,48 @@ public enum Initializer {
 	// TODO figure out how to get unit testing to work when this is private
 	Map<String, Map<Integer, Map<Integer,wUStatus>>> unitsOnServer;
 
+	Initializer(ServletConfig servletConfig){
+		try{
+			//we read credentials once here.  Minimizing reads to the disk
+			credentials=new PropertiesCredentials(
+					new FileInputStream(Constants.credentialsFile));
+			JAXBContext context = JAXBContext.newInstance(WorkUnit.class);
+			workUnitMarshaller = context.createMarshaller();
+			workUnitMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+			sqsClient = new AmazonSQSAsyncClient(this.credentials);
+			dispatchQueue = createQueue(sqsClient, Constants.dispatchQueueName);
+			returnQueue = createQueue(sqsClient, Constants.returnQueueName);
+			unitsOnServer= createUnitsOnServer();
+			//createInitialInstances();  //TODO change this back, EC2 creation is disabled for testing
+		}
+		catch (AmazonServiceException ase) {
+			System.err.println("Caught an AmazonServiceException, which means your request made it " +
+					"to Amazon AWS, but was rejected with an error response for some reason.");
+			System.err.println("Error Message:    " + ase.getMessage());
+			System.err.println("HTTP Status Code: " + ase.getStatusCode());
+			System.err.println("AWS Error Code:   " + ase.getErrorCode());
+			System.err.println("Error Type:       " + ase.getErrorType());
+			System.err.println("Request ID:       " + ase.getRequestId());
+		}
+		catch (AmazonClientException ace) {
+			System.err.println("Caught an AmazonClientException, which means the client encountered " +
+					"a serious internal problem while trying to communicate with AWS, such as not " +
+					"being able to access the network.");
+			System.err.println("Error Message: " + ace.getMessage());
+		}
+		catch (NullPointerException npee){
+			System.err.println("Couldn't find credentials file\n");
+		}
+		catch (Exception e){
+			System.err.println(e);
+		}
+
+		//start the SQSListener
+		sqsListener = new Thread(new SqsListener());
+		sqsListener.start();
+
+	}
+
 	private Initializer(){
 		try{
 			//we read credentials once here.  Minimizing reads to the disk
@@ -97,6 +140,10 @@ public enum Initializer {
 		sqsListener = new Thread(new SqsListener());
 		sqsListener.start();
 
+	}
+
+	public static Initializer getInstance(){
+		return INSTANCE;
 	}
 
 	private void createInitialInstances() throws Exception {
