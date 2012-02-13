@@ -49,9 +49,9 @@ public class WorkUnitGenerator {
 
 	public static Integer BuildJob(String receptor, String ownerID, VinaParams vinaParams, FilterParams filterParams) throws SQLException, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
 		//find the new JobID
-		Integer jobID= Initializer.INSTANCE.getMaxJobID(ownerID);
+		Integer jobID= Initializer.getInstance().getMaxJobID(ownerID);
 		//put an empty job on the server
-		Initializer.INSTANCE.putJobOnServer(ownerID, jobID,new HashMap<Integer,wUStatus>());
+		Initializer.getInstance().putJobOnServer(ownerID, jobID,new HashMap<Integer,wUStatus>());
 		DetermineWorkToDo jobWork= new DetermineWorkToDo(receptor, ownerID, filterParams);
 		String receptorID=jobWork.PutReceptorInDatabase();
 		List<String> compoundIDs=jobWork.FilterCompoundsInDatabase();
@@ -62,23 +62,23 @@ public class WorkUnitGenerator {
 		for(String i:compoundIDs){
 			SendMessageBatchRequestEntry entry=putWorkUnitInSQSBatch(BuildWorkUnit(receptorID, i, ownerID, jobID, workUnitId, vinaParams));
 			batch.add(entry);
-			Initializer.INSTANCE.putWorkUnit(ownerID, jobID, Integer.getInteger(entry.getId()), wUStatus.INFLIGHT);//TODO this needs to be atomic with the actual adding of the unit to sqs
+			Initializer.getInstance().putWorkUnit(ownerID, jobID, Integer.getInteger(entry.getId()), wUStatus.INFLIGHT);//TODO this needs to be atomic with the actual adding of the unit to sqs
 			workUnitId++;
 			iter++;
 			//System.out.println(workUnitId); //TODO remove this
 			if (iter>=10){
-				SendMessageBatchRequest request= new SendMessageBatchRequest(Initializer.INSTANCE.getDispatchQueue(), batch);
-				//futures.add(Initializer.INSTANCE.getSqsClient().sendMessageBatchAsync(request));
-				Initializer.INSTANCE.getSqsClient().sendMessageBatch(request);
+				SendMessageBatchRequest request= new SendMessageBatchRequest(Initializer.getInstance().getDispatchQueue(), batch);
+				//futures.add(Initializer.getInstance().getSqsClient().sendMessageBatchAsync(request));
+				Initializer.getInstance().getSqsClient().sendMessageBatch(request);
 				//System.out.println("batch sent");
 				iter=0;
 				batch.removeAll(batch);
 			}
 
 		}
-		SendMessageBatchRequest request= new SendMessageBatchRequest(Initializer.INSTANCE.getDispatchQueue(), batch);
-		//futures.add(Initializer.INSTANCE.getSqsClient().sendMessageBatchAsync(request));
-		Initializer.INSTANCE.getSqsClient().sendMessageBatch(request);
+		SendMessageBatchRequest request= new SendMessageBatchRequest(Initializer.getInstance().getDispatchQueue(), batch);
+		//futures.add(Initializer.getInstance().getSqsClient().sendMessageBatchAsync(request));
+		Initializer.getInstance().getSqsClient().sendMessageBatch(request);
 		System.out.println("batch sent");
 /*		while(futures.isEmpty()==false){
 			List<Future<SendMessageBatchResult>> toRemove= new ArrayList<Future<SendMessageBatchResult>>();
@@ -120,13 +120,13 @@ public class WorkUnitGenerator {
 	public static SendMessageBatchRequestEntry putWorkUnitInSQSBatch(WorkUnit workunit) throws InternalError, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
 		//do the marshalling
 		java.io.StringWriter sw = new StringWriter();
-		Marshaller m = Initializer.INSTANCE.getWorkUnitMarshaller();
+		Marshaller m = Initializer.getInstance().getWorkUnitMarshaller();
 		m.marshal(workunit, sw);
 		String marshalledUnit= sw.toString();
 		SendMessageBatchRequestEntry entry = new SendMessageBatchRequestEntry(workunit.getWorkUnitID().toString(),marshalledUnit);
 		//put in the entry
-		/*AmazonSQSAsync sqsClient = Initializer.INSTANCE.getSqsClient();
-		sqsClient.sendMessageAsync(new SendMessageRequest(Initializer.INSTANCE.getDispatchQueue(),marshalledUnit));*/
+		/*AmazonSQSAsync sqsClient = Initializer.getInstance().getSqsClient();
+		sqsClient.sendMessageAsync(new SendMessageRequest(Initializer.getInstance().getDispatchQueue(),marshalledUnit));*/
 		return entry;
 	}
 	
@@ -135,8 +135,8 @@ public class WorkUnitGenerator {
 		List<SendMessageBatchRequestEntry> batch=new ArrayList<SendMessageBatchRequestEntry>();
 		SendMessageBatchRequestEntry entry= putWorkUnitInSQSBatch(workUnit);
 		batch.add(entry);
-		SendMessageBatchRequest batchRequest= new SendMessageBatchRequest(Initializer.INSTANCE.getDispatchQueue(), batch);
-		Initializer.INSTANCE.getSqsClient().sendMessageBatch(batchRequest);
+		SendMessageBatchRequest batchRequest= new SendMessageBatchRequest(Initializer.getInstance().getDispatchQueue(), batch);
+		Initializer.getInstance().getSqsClient().sendMessageBatch(batchRequest);
 	}
 
 

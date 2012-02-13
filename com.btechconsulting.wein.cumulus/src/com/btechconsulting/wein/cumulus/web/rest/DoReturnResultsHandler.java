@@ -59,7 +59,7 @@ public class DoReturnResultsHandler implements RestHandler {
 		Integer jobId=Integer.valueOf(jobIds[0]);//TODO handle parse exception here
 		Boolean isDone=false;
 		try{
-			if(Initializer.INSTANCE.getNumberOfWorkUnitsInFlight(ownerId, jobId)==0){
+			if(Initializer.getInstance().getNumberOfWorkUnitsInFlight(ownerId, jobId)==0){
 				isDone=true;
 			}
 		}
@@ -99,7 +99,7 @@ public class DoReturnResultsHandler implements RestHandler {
 				e.printStackTrace();
 			}
 			//delete job from local store
-			Initializer.INSTANCE.removeJobFromServer(ownerId, jobId);
+			Initializer.getInstance().removeJobFromServer(ownerId, jobId);
 			
 		}else{
 			throw (new ServletException("Job is not finished yet"));

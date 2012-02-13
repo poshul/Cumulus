@@ -36,7 +36,7 @@ public class SqsListenerTest {
 		catch (Exception e){
 			System.err.println("Couldn't create return unit marshaller");
 		}
-		AmazonSQSClient sqsClient=new AmazonSQSClient(Initializer.INSTANCE.getCredentials());
+		AmazonSQSClient sqsClient=new AmazonSQSClient(Initializer.getInstance().getCredentials());
 		Map<Integer, Initializer.wUStatus> work= new HashMap<Integer, Initializer.wUStatus>();
 		
 		ReturnUnit testUnit= new ReturnUnit();
@@ -48,11 +48,11 @@ public class SqsListenerTest {
 		//marshal the return unit and put it on the server
 		//put the work unit in the sqs and the unitsOnServer map
 		work.put(testWorkunitID, Initializer.wUStatus.INFLIGHT);
-		Initializer.INSTANCE.putJobOnServer(testUID, testjobID, work);
+		Initializer.getInstance().putJobOnServer(testUID, testjobID, work);
 		try {
 			marshaller.marshal(testUnit,writer);
 			String marshalledReturn= writer.toString();
-			SendMessageRequest request = new SendMessageRequest(Initializer.INSTANCE.getReturnQueue(),marshalledReturn);
+			SendMessageRequest request = new SendMessageRequest(Initializer.getInstance().getReturnQueue(),marshalledReturn);
 			sqsClient.sendMessage(request);
 		} catch (JAXBException e) {
 			e.printStackTrace();
@@ -64,13 +64,13 @@ public class SqsListenerTest {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		assertEquals(Initializer.wUStatus.DONE,Initializer.INSTANCE.getStatusOfWorkUnit(testUID, testjobID, testWorkunitID));
+		assertEquals(Initializer.wUStatus.DONE,Initializer.getInstance().getStatusOfWorkUnit(testUID, testjobID, testWorkunitID));
 	}
 	//delete the unit from the queue
 
 	@After
 	public void tearDown() throws Exception{
-		Initializer.INSTANCE.teardownAll();
+		Initializer.getInstance().teardownAll();
 	}
 
 }

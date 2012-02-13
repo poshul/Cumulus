@@ -24,6 +24,50 @@
 			<param-name>credentials</param-name>
 			<param-value>/WEB-INF/AwsCredentials.properties</param-value>
 		</init-param>
+		<init-param>
+			<param-name>initialInstances</param-name>
+			<param-value>2</param-value>
+		</init-param>
+		<init-param>
+			<param-name>dispatchQueueName</param-name>
+			<param-value>dispatchQueue</param-value>
+		</init-param>
+		<init-param>
+			<param-name>returnQueueName</param-name>
+			<param-value>returnQueue</param-value>
+		</init-param>
+		<init-param>
+			<param-name>ec2Region</param-name>
+			<param-value>ec2.us-east-1.amazonaws.com</param-value>
+		</init-param>
+		<init-param>
+			<param-name>instanceType</param-name>
+			<param-value>t1.micro</param-value>
+		</init-param>
+		<init-param>
+			<param-name>imageID</param-name>
+			<param-value>ami-1e39ca77</param-value>
+		</init-param>
+		<init-param>
+			<param-name>securityGroupID</param-name>
+			<param-value>ssh</param-value>
+		</init-param>
+		<init-param>
+			<param-name>keyName</param-name>
+			<param-value>Samkeys</param-value>
+		</init-param>
+		<init-param>
+			<param-name>jdbcUrl</param-name>
+			<param-value>jdbc:mysql://192.168.1.16:3306/cumulus</param-value>
+		</init-param>
+		<init-param>
+			<param-name>jdbcUser</param-name>
+			<param-value>cumulus</param-value>
+		</init-param>
+		<init-param>
+			<param-name>jdbcPassword</param-name>
+			<param-value>cumulus</param-value>
+		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 	<servlet-mapping>

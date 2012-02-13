@@ -65,7 +65,7 @@ public class RestServlet extends HttpServlet{
 				throw new ServletException("No configuration file specified for RestServlet");
 			}
 			
-			Initializer(servletConfig);//load the Initializer class into memory
+			Initializer.getInstance(servletConfig);//load the Initializer class into memory
 
 		} 
 	}

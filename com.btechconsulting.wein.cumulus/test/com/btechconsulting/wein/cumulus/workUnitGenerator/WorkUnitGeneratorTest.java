@@ -98,7 +98,7 @@ public class WorkUnitGeneratorTest {
 		WorkUnitGenerator.putWorkUnitInSQSBatch(testWorkUnit);
 		AmazonSQS sqsClient = new AmazonSQSClient(new PropertiesCredentials(
 				new FileInputStream(Constants.credentialsFile)));
-		ReceiveMessageRequest messageRequest= new ReceiveMessageRequest(Initializer.INSTANCE.getDispatchQueue());
+		ReceiveMessageRequest messageRequest= new ReceiveMessageRequest(Initializer.getInstance().getDispatchQueue());
 		 List<Message> messages= sqsClient.receiveMessage(messageRequest).getMessages();
 		 for (Message message : messages) {
 				//test unmarshalling of the message
@@ -151,7 +151,7 @@ public class WorkUnitGeneratorTest {
 		WorkUnitGenerator.PutWorkUnitOnServer(testWorkUnit);
 		AmazonSQS sqsClient = new AmazonSQSClient(new PropertiesCredentials(
 				new FileInputStream(Constants.credentialsFile)));
-		ReceiveMessageRequest messageRequest= new ReceiveMessageRequest(Initializer.INSTANCE.getDispatchQueue());
+		ReceiveMessageRequest messageRequest= new ReceiveMessageRequest(Initializer.getInstance().getDispatchQueue());
 		 List<Message> messages= sqsClient.receiveMessage(messageRequest).getMessages();
 		 for (Message message : messages) {
 				//test unmarshalling of the message
@@ -165,6 +165,6 @@ public class WorkUnitGeneratorTest {
 
 /*	@After
 	public void tearDown() throws Exception {
-		Initializer.INSTANCE.teardownAll();
+		Initializer.getInstance().teardownAll();
 	}*/
 }
