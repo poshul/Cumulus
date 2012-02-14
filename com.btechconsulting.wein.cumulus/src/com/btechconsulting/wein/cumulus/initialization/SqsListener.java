@@ -27,8 +27,8 @@ class SqsListener implements Runnable {
 		AmazonSQSClient sqsClient=new AmazonSQSClient(Initializer.getInstance().getCredentials());
 		javax.xml.bind.Unmarshaller unMarshaller = null;
 		try{
-		JAXBContext context= JAXBContext.newInstance(ReturnUnit.class);
-		unMarshaller= context.createUnmarshaller();
+			JAXBContext context= JAXBContext.newInstance(ReturnUnit.class);
+			unMarshaller= context.createUnmarshaller();
 		}
 		catch (JAXBException jbe){
 			//This exception is bad, and should result in the system terminating, as cleanly as possible
@@ -63,7 +63,12 @@ class SqsListener implements Runnable {
 				Thread.sleep(1000); // this prevents us from polling constantly, running up a huge bill
 			} catch (InterruptedException e) {
 				System.err.println("Sqslistener was interrupted");
-				continue;
+				if (Initializer.getInstance(null).getShuttingDown()){
+					break;
+				}
+				else{
+					continue;
+				}
 			}
 		}
 	}

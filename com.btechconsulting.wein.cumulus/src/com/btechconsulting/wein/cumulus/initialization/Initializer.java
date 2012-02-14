@@ -58,13 +58,14 @@ public class Initializer {
 	private Marshaller workUnitMarshaller;
 	private PropertiesCredentials credentials;
 	private Thread sqsListener;
+	private Boolean shuttingDown=false;
 	// units on server is a map of OwnerID to a map of JobID to a map of WorkUnitID to work Unit status
 	// TODO figure out how to get unit testing to work when this is private
 	Map<String, Map<Integer, Map<Integer,wUStatus>>> unitsOnServer;
 
 
 	public static Initializer getInstance(ServletContext servletContext){
-		System.out.println(instance);
+		//System.out.println(instance);
 		if (instance==null){
 			instance = new Initializer(servletContext);
 		}
@@ -143,6 +144,7 @@ public class Initializer {
 
 		//start the SQSListener
 		sqsListener = new Thread(new SqsListener());
+		sqsListener.setName("sqsListener");
 		sqsListener.start();//FIXME
 
 	}
@@ -199,6 +201,7 @@ public class Initializer {
 	 * 
 	 */
 	public void teardownAll(){
+		this.shuttingDown=true;
 		this.sqsListener.interrupt();
 		sqsClient.deleteQueue(new DeleteQueueRequest(dispatchQueue));
 		sqsClient.deleteQueue(new DeleteQueueRequest(returnQueue));
@@ -367,6 +370,13 @@ public class Initializer {
 	 */
 	public void setCredentials(PropertiesCredentials credentials) {
 		this.credentials = credentials;
+	}
+
+	/**
+	 * @return the shuttingDown
+	 */
+	public Boolean getShuttingDown() {
+		return shuttingDown;
 	}
 
 

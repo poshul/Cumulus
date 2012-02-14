@@ -71,6 +71,20 @@ public class RestServlet extends HttpServlet{
 
 		} 
 	}
+	
+	
+
+	/* (non-Javadoc)
+	 * @see javax.servlet.GenericServlet#destroy()
+	 */
+	@Override
+	public void destroy() {
+		// TODO Auto-generated method stub
+		Initializer.getInstance(getServletContext()).teardownAll();
+		super.destroy();
+	}
+
+
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		doGet(request, response);
