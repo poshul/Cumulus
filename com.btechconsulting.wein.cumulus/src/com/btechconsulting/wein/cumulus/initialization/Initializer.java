@@ -2,6 +2,8 @@ package com.btechconsulting.wein.cumulus.initialization;
 
 
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -9,8 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
@@ -61,13 +63,14 @@ public class Initializer {
 	Map<String, Map<Integer, Map<Integer,wUStatus>>> unitsOnServer;
 
 
-	public static Initializer getInstance(ServletConfig servletConfig){
+	public static Initializer getInstance(ServletContext servletContext){
+		System.out.println(instance);
 		if (instance==null){
-			instance = new Initializer(servletConfig);
+			instance = new Initializer(servletContext);
 		}
 		return instance;
 	}
-	
+
 	//this is a compatability method
 	public static Initializer getInstance(){
 		if (instance==null){
@@ -76,14 +79,37 @@ public class Initializer {
 		}
 		return instance;
 	}
-	
-	
 
-	private Initializer(ServletConfig servletConfig){
+
+
+	private Initializer(ServletContext servletContext){
 		try{
 			//we read credentials once here.  Minimizing reads to the disk
-			credentials=new PropertiesCredentials(
-					new FileInputStream(Constants.credentialsFile));
+			FileInputStream creds= null;
+			System.out.println(servletContext);
+			if (servletContext==null){// if we are not being run off a servlet
+				creds= new FileInputStream(Constants.credentialsFile);
+			}else{// if we are running as a servlet get the credentials location from the servletConfig
+				try{
+					String credsName= (String) servletContext.getAttribute("creds");
+					URL url= servletContext.getResource(credsName);//get the creds file location from the servlet
+					if (url== null){
+						url = getClass().getResource(credsName);
+					}
+
+					if (url == null) {
+						System.err.println("No configuration found for RestServlet: " + credsName);
+						throw new ServletException("No configuration found for RestSearchAction: " + credsName);
+					}
+				credentials=new PropertiesCredentials(url.openStream());
+					
+				}
+				catch (IOException ioe) {
+					System.err.println(ioe.getMessage());
+					throw new ServletException("Error during Cumulus initialization: " + ioe.getMessage(), ioe);
+				}
+			}
+			//credentials=new PropertiesCredentials(creds);
 			JAXBContext context = JAXBContext.newInstance(WorkUnit.class);
 			workUnitMarshaller = context.createMarshaller();
 			workUnitMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
@@ -117,7 +143,7 @@ public class Initializer {
 
 		//start the SQSListener
 		sqsListener = new Thread(new SqsListener());
-		sqsListener.start();
+		sqsListener.start();//FIXME
 
 	}
 
