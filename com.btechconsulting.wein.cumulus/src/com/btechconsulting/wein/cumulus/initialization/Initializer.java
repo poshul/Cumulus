@@ -90,6 +90,7 @@ public class Initializer {
 			System.out.println(servletContext);
 			if (servletContext==null){// if we are not being run off a servlet
 				creds= new FileInputStream(Constants.credentialsFile);
+				credentials = new PropertiesCredentials(creds);
 			}else{// if we are running as a servlet get the credentials location from the servletConfig
 				try{
 					String credsName= (String) servletContext.getAttribute("creds");
@@ -217,7 +218,7 @@ public class Initializer {
 			// get all of the instanceID's.  add them to the list
 			DescribeInstancesResult describeInstancesResult = ec2.describeInstances(describeInstancesRequest);
 			List<Reservation> reservations = describeInstancesResult.getReservations();
-			if (reservations!=null){
+			if (reservations!=null&& reservations.size()!=0){
 				for (Reservation reservation: reservations){
 					List<Instance> instances = reservation.getInstances();
 					if (instances!=null){
@@ -226,11 +227,11 @@ public class Initializer {
 						}
 					}
 				}
+				// Terminate instances.
+				System.out.println("Terminate instances");
+				TerminateInstancesRequest terminateRequest = new TerminateInstancesRequest(instanceIds);
+				ec2.terminateInstances(terminateRequest);
 			}
-			// Terminate instances.
-			System.out.println("Terminate instances");
-			TerminateInstancesRequest terminateRequest = new TerminateInstancesRequest(instanceIds);
-			ec2.terminateInstances(terminateRequest);
 		} catch (AmazonServiceException e) {
 			// Write out any exceptions that may have occurred.
 			System.err.println("Error terminating instances");

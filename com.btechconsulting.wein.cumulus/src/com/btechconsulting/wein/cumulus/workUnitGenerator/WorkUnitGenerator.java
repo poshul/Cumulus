@@ -62,7 +62,8 @@ public class WorkUnitGenerator {
 		for(String i:compoundIDs){
 			SendMessageBatchRequestEntry entry=putWorkUnitInSQSBatch(BuildWorkUnit(receptorID, i, ownerID, jobID, workUnitId, vinaParams));
 			batch.add(entry);
-			Initializer.getInstance().putWorkUnit(ownerID, jobID, Integer.getInteger(entry.getId()), wUStatus.INFLIGHT);//TODO this needs to be atomic with the actual adding of the unit to sqs
+			Initializer.getInstance().putWorkUnit(ownerID, jobID, workUnitId, wUStatus.INFLIGHT);//TODO this needs to be atomic with the actual adding of the unit to sqs
+			//FIXME we aren't adding the unit to the workunitsonserverobject correctly
 			workUnitId++;
 			iter++;
 			//System.out.println(workUnitId); //TODO remove this
@@ -76,6 +77,7 @@ public class WorkUnitGenerator {
 			}
 
 		}
+		//this catches the last <10
 		SendMessageBatchRequest request= new SendMessageBatchRequest(Initializer.getInstance().getDispatchQueue(), batch);
 		//futures.add(Initializer.getInstance().getSqsClient().sendMessageBatchAsync(request));
 		Initializer.getInstance().getSqsClient().sendMessageBatch(request);
@@ -91,7 +93,7 @@ public class WorkUnitGenerator {
 			}
 		}*/
 		//logger.debug("created "+workUnitId+" workunits");
-		return workUnitId;
+		return jobID;
 	}
 
 

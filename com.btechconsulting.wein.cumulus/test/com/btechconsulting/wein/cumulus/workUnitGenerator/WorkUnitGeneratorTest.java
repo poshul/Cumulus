@@ -96,8 +96,7 @@ public class WorkUnitGeneratorTest {
 		testWorkUnit.setVinaParams(params);
 		testWorkUnit.setWorkUnitID(workUnitId);
 		WorkUnitGenerator.putWorkUnitInSQSBatch(testWorkUnit);
-		AmazonSQS sqsClient = new AmazonSQSClient(new PropertiesCredentials(
-				new FileInputStream(Constants.credentialsFile)));
+		AmazonSQS sqsClient = new AmazonSQSClient(Initializer.getInstance().getCredentials());
 		ReceiveMessageRequest messageRequest= new ReceiveMessageRequest(Initializer.getInstance().getDispatchQueue());
 		 List<Message> messages= sqsClient.receiveMessage(messageRequest).getMessages();
 		 for (Message message : messages) {

@@ -93,6 +93,7 @@ public class DoSearchHandler implements RestHandler {
 		
 		try {
 			Integer jobId= WorkUnitGenerator.BuildJob(receptor, ownerId, vinaParamsObj, filterParamsObj);
+			response.setContentType("text/xml");
 			response.addIntHeader(JOBID, jobId);
 			//TODO return number of units created to 
 		} catch (AmazonServiceException ase) {

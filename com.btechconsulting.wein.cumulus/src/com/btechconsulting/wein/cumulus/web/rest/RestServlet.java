@@ -37,7 +37,6 @@ public class RestServlet extends HttpServlet{
 			String configFile = servletConfig.getInitParameter(CONFIG_INIT_PARAM);
 			String credentialsFile= servletConfig.getInitParameter(CREDENTIALS_PARAM);
 			getServletContext().setAttribute("creds", credentialsFile); //store the location of the servlet file in the servlet context
-			logger.error(getServletContext().getAttribute("creds"));//FIXME remove
 			if (configFile != null){
 				try {
 					URL url = getServletContext().getResource(configFile);
