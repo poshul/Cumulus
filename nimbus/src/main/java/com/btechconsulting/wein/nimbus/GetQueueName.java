@@ -33,7 +33,7 @@ import com.amazonaws.services.ec2.model.TagDescription;
 public class GetQueueName {
 	/**
 	 * 
-	 * @param credentialsFile TODO
+	 * @param credentialsFile
 	 * @param instanceID, the unique instance ID of the EC2 Instance
 	 * @return A map of the queue name to queue url
 	 * @throws FileNotFoundException

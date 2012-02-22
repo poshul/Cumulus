@@ -51,7 +51,7 @@ public class VinaCallerTest {
 		assert(decodedParams.equals(expectedParams));
 	}
 
-	@Test
+	//@Test
 	public void testCall() throws Exception {
 		VinaParams vinaParams= new VinaParams();
 		vinaParams.setCenterX((float)-2.2);
@@ -61,7 +61,7 @@ public class VinaCallerTest {
 		vinaParams.setSizeY(22);
 		vinaParams.setSizeZ(22);
 		vinaParams.setExhaustiveness(15);
-		VinaCaller caller = new VinaCaller("src/main/resources/APC.pdbqt", "src/main/resources/1HWKnohet.pdbqt", vinaParams);
+		VinaCaller caller = new VinaCaller("resources/APC.pdbqt", "resources/1HWKnohet.pdbqt", vinaParams);
 		String returnString=caller.call();
 		System.out.println(returnString);
 	}

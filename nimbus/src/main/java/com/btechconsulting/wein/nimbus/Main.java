@@ -59,7 +59,7 @@ public class Main {
 		try {
 			credentials=new PropertiesCredentials(
 					Main.class.getResourceAsStream(Constants.CREDENTIALSFILE));
-					//new FileInputStream(Constants.CREDENTIALSFILE));
+			//new FileInputStream(Constants.CREDENTIALSFILE));
 		} catch (FileNotFoundException e1) {
 			System.err.println("Error reading credentials file");
 			e1.printStackTrace();
@@ -149,7 +149,7 @@ public class Main {
 			try{
 				unMarshalledUnit= UnmarshallWorkUnit(marshalledWorkUnit);
 			}
-			
+
 			catch (JAXBException e) {
 				System.err.println("Couldn't unmarshall WorkUnit");
 				// TODO: handle exception send error to queue
@@ -167,7 +167,7 @@ public class Main {
 			returnU.setWorkUnitID(unMarshalledUnit.getWorkUnitID());
 			returnU.setStatus("ERROR");//I'd much rather have a return unit incorrectly marked as an error than have a null status
 
-			
+
 			//Check to make sure that we haven't already done this calculation;
 			String queryStatement="SELECT count(*) FROM cumulus.results WHERE owner_id='"+unMarshalledUnit.getOwnerID()+"' and job_id='"+unMarshalledUnit.getJobID()+"' and workunit_id='"+unMarshalledUnit.getWorkUnitID()+"';";
 			Integer numResults=null;
@@ -390,7 +390,31 @@ public class Main {
 
 	private static List<Message> GetMessageBundle(String dispatchQueue, AmazonSQSClient client){
 		ReceiveMessageRequest request = new ReceiveMessageRequest(dispatchQueue).withMaxNumberOfMessages(1).withVisibilityTimeout(930);
-		ReceiveMessageResult result= client.receiveMessage(request);
+		ReceiveMessageResult result= new ReceiveMessageResult();
+		Integer retries=0;
+		while (retries<=2){
+			try{
+				result= client.receiveMessage(request);
+				break;
+			}
+			catch (Exception e){ //this lets us recover from transient "queue does not exist" faults
+				System.err.println("Caught amazon exception");
+				System.err.println(e);
+				retries++;
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e1) {
+					//we should never reach here
+					e1.printStackTrace();
+					System.exit(2);
+				}
+				continue;
+			}
+		}
+		if (retries>2){
+			System.err.println("Couldn't connect to AWS");
+			System.exit(1);
+		}
 		List<Message> messageList =result.getMessages();
 		return messageList;
 	}

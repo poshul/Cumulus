@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.btechconsulting.wein</groupId>
 	<artifactId>nimbus</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<name>Nimbus</name>
 	<description>Client application for Cumulus</description>
 
@@ -85,6 +85,17 @@
 	<profiles>
 		<profile>
 			<id>jar</id>
+			<build>
+				<resources>
+					<resource>
+						<directory>resources</directory>
+						<targetPath>resources</targetPath>
+					</resource>
+				</resources>
+			</build>
+		</profile>
+		<profile>
+			<id>cloud</id>
 			<build>
 				<resources>
 					<resource>
