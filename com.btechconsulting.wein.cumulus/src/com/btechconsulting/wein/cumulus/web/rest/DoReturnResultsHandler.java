@@ -17,12 +17,16 @@ import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 
 import org.apache.log4j.Logger;
 import org.apache.tomcat.dbcp.dbcp.PoolableConnectionFactory;
 
 import com.btechconsulting.wein.cumulus.initialization.Initializer;
 import com.btechconsulting.wein.cumulus.initialization.PooledConnectionFactory;
+import com.btechconsulting.wein.cumulus.model.Results;
 import com.btechconsulting.wein.cumulus.web.rest.RestHandler;
 
 /**
@@ -30,13 +34,13 @@ import com.btechconsulting.wein.cumulus.web.rest.RestHandler;
  *
  */
 public class DoReturnResultsHandler implements RestHandler {
-	
+
 	public static final String OWNERID="ownerId";
 	public static final String JOBID="jobId";
 	private final Logger logger= Logger.getLogger(DoReturnResultsHandler.class);
 
-	
-	
+
+
 
 	/* (non-Javadoc)
 	 * @see com.btechconsulting.wein.cumulus.web.rest.RestHandler#executeSearch(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
@@ -50,7 +54,7 @@ public class DoReturnResultsHandler implements RestHandler {
 			throw new ServletException("You must supply an ownerID");
 		}
 		String ownerId=ownerIds[0];
-		
+
 		String[] jobIds= request.getParameterValues(JOBID);
 		if (jobIds==null|| jobIds.length!=1){
 			logger.debug("User didn't supply an jobID");
@@ -70,7 +74,7 @@ public class DoReturnResultsHandler implements RestHandler {
 		//only proceed if we are done
 		if (isDone){
 			//TODO parse all results, return a list of ERROR, and DONE
-			
+
 			//get all of the results from the database
 			String query="SELECT results FROM cumulus.results WHERE owner_id='"+ownerId+"' AND job_id='"+jobId+"';";
 			List<String> resultpdbqts =new ArrayList<String>();
@@ -85,11 +89,26 @@ public class DoReturnResultsHandler implements RestHandler {
 				// TODO deal with ramifications of a sql exception
 				e.printStackTrace();
 			}
-			//put the results in the output stream
-			Writer out = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()));
+			//set up the response
+			response.setContentType("text/xml");
+			response.addIntHeader(JOBID, jobId);
+			//get the output stream
+			Writer out = response.getWriter();
+			//create a results object for the results.
+			Results results= new Results();
+			//put each result in the results object
 			for(String i:resultpdbqts){
-			out.write(i);
+				results.getResult().add(i);
 			}
+			try {
+				JAXBContext context = JAXBContext.newInstance(Results.class);
+				Marshaller m = context.createMarshaller();
+				m.marshal(results, out);
+			} catch (JAXBException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
 			//delete results from sql
 			query="DELETE FROM cumulus.results WHERE owner_id='"+ownerId+"' and job_id='"+jobId+"';";
 			try {
@@ -100,7 +119,7 @@ public class DoReturnResultsHandler implements RestHandler {
 			}
 			//delete job from local store
 			Initializer.getInstance().removeJobFromServer(ownerId, jobId);
-			
+
 		}else{
 			throw (new ServletException("Job is not finished yet"));
 		}

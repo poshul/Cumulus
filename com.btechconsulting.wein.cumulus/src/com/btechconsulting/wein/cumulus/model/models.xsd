@@ -84,4 +84,10 @@
     		<xs:element name="min_suppliers" type="string" maxOccurs="1" minOccurs="0"></xs:element>
     	</xs:sequence>
     </xs:complexType>
+
+    <xs:complexType name="Results">
+    	<xs:sequence>
+            <xs:element name="Result" type="string" maxOccurs="unbounded" minOccurs="0"></xs:element>
+        </xs:sequence>
+    </xs:complexType>
 </xs:schema>

@@ -49,7 +49,7 @@ public class WorkUnitGenerator {
 
 	public static Integer BuildJob(String receptor, String ownerID, VinaParams vinaParams, FilterParams filterParams) throws SQLException, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
 		//find the new JobID
-		Integer jobID= Initializer.getInstance().getMaxJobID(ownerID);
+		Integer jobID= Initializer.getInstance().getMaxJobID(ownerID)+1;//our jobID is the NEXT integer
 		//put an empty job on the server
 		Initializer.getInstance().putJobOnServer(ownerID, jobID,new HashMap<Integer,wUStatus>());
 		DetermineWorkToDo jobWork= new DetermineWorkToDo(receptor, ownerID, filterParams);

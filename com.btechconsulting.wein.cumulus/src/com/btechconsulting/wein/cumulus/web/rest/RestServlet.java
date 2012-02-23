@@ -78,8 +78,8 @@ public class RestServlet extends HttpServlet{
 	 */
 	@Override
 	public void destroy() {
-		// TODO Auto-generated method stub
 		Initializer.getInstance(getServletContext()).teardownAll();
+		System.err.println("Shutting down");
 		super.destroy();
 	}
 

@@ -104,8 +104,8 @@ public class InitializerTest {
 		assertEquals(Initializer.getInstance().getMaxJobID("5"),(Integer) 5);
 		//test that we behave when there are multiple jobs for a user
 		testUID.put(6,testJob);
-		Initializer.getInstance().unitsOnServer.put("6", testUID );
-		assertEquals(Initializer.getInstance().getMaxJobID("6"),(Integer) 6);
+		Initializer.getInstance().unitsOnServer.put("5", testUID );
+		assertEquals(Initializer.getInstance().getMaxJobID("5"),(Integer) 6);
 	}
 	
 	@Test(expected=IllegalStateException.class)
