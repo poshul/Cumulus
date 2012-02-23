@@ -31,6 +31,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.tomcat.dbcp.pool.impl.GenericKeyedObjectPool.Config;
+
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
@@ -40,6 +42,7 @@ import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.btechconsulting.wein.nimbus.model.ReturnUnit;
 import com.btechconsulting.wein.nimbus.model.WorkUnit;
+
 
 /**
  * @author Samuel Wein
@@ -73,29 +76,45 @@ public class Main {
 			//we should never reach here if we do it indicates a flow problem
 			System.exit(2);
 		}
-		/*
-		Map<String,String> queues= new HashMap<String, String>(); 
+
+		//get Properties file
+		Boolean mvn= false; //this tracks if we are being run from the maven build, and whether to take properties from constants for nimbus.properties
+		java.util.Properties props= new java.util.Properties();
+		try {
+			props.load( Main.class.getResourceAsStream(Constants.NIMBUSPROPSFILE));
+			mvn=true;
+		} catch (IOException e4) {
+			//this means we couldn't load the properties file, so we default to the settings in constants.
+			e4.printStackTrace();
+			mvn=false;
+		}
+		
 		String dispatchQueue=null;
 		String returnQueue=null;
-		dispatchQueue= queues.get("dispatch");
-		returnQueue= queues.get("return");
-		if (dispatchQueue==null|| returnQueue==null){
-			System.err.println("Couldn't get queue names");
-			System.exit(1);
+		if ((mvn==true && Boolean.getBoolean(props.getProperty("onCloud")))|| (mvn==false && Constants.ONCLOUD)){ //if we are in maven and on the cloud or if we aren't on maven and are on the cloud
+			Map<String,String> queues= new HashMap<String, String>(); 
+
+			dispatchQueue= queues.get("dispatch");
+			returnQueue= queues.get("return");
+			if (dispatchQueue==null|| returnQueue==null){
+				System.err.println("Couldn't get queue names");
+				System.exit(1);
+			}
+			try {
+				queues = GetQueueName.GetQueues(GetQueueName.GetInstanceID(), null);
+			} catch (IOException e) {
+				System.err.println("Error reading credentials file");
+				e.printStackTrace();
+				System.exit(1);
+			} catch (IllegalStateException e) {
+				System.err.println("Internal Error");
+				e.printStackTrace();
+				System.exit(1);
+			}
+		} else{ //If we are not running from an ec2 instance take static queue names
+			dispatchQueue= "https://queue.amazonaws.com/157399895577/dispatchQueue";
+			returnQueue= "https://queue.amazonaws.com/157399895577/returnQueue";
 		}
-		try {
-			queues = GetQueueName.GetQueues(GetQueueName.GetInstanceID(), null);
-		} catch (IOException e) {
-			System.err.println("Error reading credentials file");
-			e.printStackTrace();
-			System.exit(1);
-		} catch (IllegalStateException e) {
-			System.err.println("Internal Error");
-			e.printStackTrace();
-			System.exit(1);
-		}*/
-		String dispatchQueue= "https://queue.amazonaws.com/157399895577/dispatchQueue";
-		String returnQueue= "https://queue.amazonaws.com/157399895577/returnQueue";
 		//Get SQS client.
 		AmazonSQSClient client = new AmazonSQSClient(credentials);
 
@@ -125,7 +144,7 @@ public class Main {
 			List<Message> messageList = GetMessageBundle(dispatchQueue, client);
 			if (messageList.size()==0){//if the queue didn't have any messages
 				try {
-					Thread.sleep(Constants.WAITTIME);
+					Thread.sleep(Long.valueOf(props.getProperty("waitTime")));
 				} catch (InterruptedException e) {
 					System.err.println("Waiting interrupted");
 					e.printStackTrace();
@@ -341,7 +360,7 @@ public class Main {
 						ioe.printStackTrace();
 					}
 					if (results==null){
-						results="No confirmations were found with submitted parameters";
+						results=unMarshalledUnit.getPointerToMolecule()+": No confirmations were found with submitted parameters";
 					}
 
 					//put results into sql

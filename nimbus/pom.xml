@@ -93,6 +93,18 @@
 					</resource>
 				</resources>
 			</build>
+			<properties>
+				<vinaloc>vina</vinaloc>
+				<credentialsfile>/resources/AwsCredentials.properties</credentialsfile>
+				<instanceIdLoc>http://169.254.169.254/latest/meta-data/instance-id</instanceIdLoc>
+				<shutdownCommand>/sbin/shutdown</shutdownCommand>
+				<shutdownModifier>-k</shutdownModifier>
+				<waitTime>600000</waitTime>
+				<JDBCURL>jdbc:mysql://192.168.1.16/cumulus</JDBCURL>
+				<JDBCUser>cumulus</JDBCUser>
+				<JDBCPassword>cumulus</JDBCPassword>
+				<onCloud>false</onCloud>
+			</properties>
 		</profile>
 		<profile>
 			<id>cloud</id>
@@ -104,6 +116,18 @@
 					</resource>
 				</resources>
 			</build>
+			<properties>
+				<vinaloc>vina</vinaloc>
+				<credentialsfile>/resources/AwsCredentials.properties</credentialsfile>
+				<instanceIdLoc>http://169.254.169.254/latest/meta-data/instance-id</instanceIdLoc>
+				<shutdownCommand>/sbin/shutdown</shutdownCommand>
+				<shutdownModifier>-k</shutdownModifier>
+				<waitTime>600000</waitTime>
+				<JDBCURL>jdbc:mysql://helix.b-techconsulting.com/cumulus</JDBCURL>
+				<JDBCUser>cumulus</JDBCUser>
+				<JDBCPassword>cumulus</JDBCPassword>
+				<onCloud>true</onCloud>
+			</properties>
 		</profile>
 	</profiles>
 
