@@ -17,6 +17,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.log4j.Logger;
 import org.apache.tomcat.dbcp.pool.impl.GenericKeyedObjectPool.Config;
 
 import com.amazonaws.auth.PropertiesCredentials;
@@ -56,12 +58,60 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		//TODO write shutdown hook here.
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
+				/*try {  //DOESN'T WORK
+					List<String> command= new ArrayList<String>();
+					command.add("/sbin/shutdown");//TODO get parameters from file
+					command.add("-k");
+					command.add("now");
+					Process process= new ProcessBuilder(command).start();
+				} catch (IOException e) {
+					// THIS IS VERY BAD
+					e.printStackTrace();
+				}*/
+				System.out.println("in : run () : shutdownHook");
+				System.out.println("Shutdown hook completed...");
+			}
+		});
+		
+		final Logger logger = Logger.getLogger(Main.class);
+		//get Properties file
+		Boolean mvn= false; //this tracks if we are being run from the maven build, and whether to take properties from constants for nimbus.properties
+		java.util.Properties props= new java.util.Properties();
+		try {
+			props.load( Main.class.getResourceAsStream(Constants.NIMBUSPROPSFILE));
+			mvn=true;
+		} catch (IOException e4) {
+			//this means we couldn't load the properties file, so we default to the settings in constants.
+			e4.printStackTrace();
+			mvn=false;
+		}
+		String VINALOC;
+		String CREDENTIALSFILE;
+		String INSTANCEIDLOC;
+		Integer WAITTIME;
+		Boolean ONCLOUD;
+		if (mvn==true){
+			VINALOC=props.getProperty("vinaLoc");
+			CREDENTIALSFILE=props.getProperty("credentialsFile");
+			INSTANCEIDLOC=props.getProperty("instanceIdLoc");
+			WAITTIME=Integer.parseInt(props.getProperty("waitTime"));
+			ONCLOUD=Boolean.getBoolean(props.getProperty("onCloud"));
+		}else{
+			VINALOC=Constants.VINALOC;
+			CREDENTIALSFILE=Constants.CREDENTIALSFILE;
+			INSTANCEIDLOC=Constants.INSTANCEIDLOC;
+			WAITTIME=Constants.WAITTIME;
+			ONCLOUD=Constants.ONCLOUD;
+		}
+		
 
 		//Get the queue names
 		PropertiesCredentials credentials = null;
 		try {
 			credentials=new PropertiesCredentials(
-					Main.class.getResourceAsStream(Constants.CREDENTIALSFILE));
+					Main.class.getResourceAsStream(CREDENTIALSFILE));
 			//new FileInputStream(Constants.CREDENTIALSFILE));
 		} catch (FileNotFoundException e1) {
 			System.err.println("Error reading credentials file");
@@ -76,24 +126,12 @@ public class Main {
 			//we should never reach here if we do it indicates a flow problem
 			System.exit(2);
 		}
-
-		//get Properties file
-		Boolean mvn= false; //this tracks if we are being run from the maven build, and whether to take properties from constants for nimbus.properties
-		java.util.Properties props= new java.util.Properties();
-		try {
-			props.load( Main.class.getResourceAsStream(Constants.NIMBUSPROPSFILE));
-			mvn=true;
-		} catch (IOException e4) {
-			//this means we couldn't load the properties file, so we default to the settings in constants.
-			e4.printStackTrace();
-			mvn=false;
-		}
-		
+				
 		String dispatchQueue=null;
 		String returnQueue=null;
-		if ((mvn==true && Boolean.getBoolean(props.getProperty("onCloud")))|| (mvn==false && Constants.ONCLOUD)){ //if we are in maven and on the cloud or if we aren't on maven and are on the cloud
+		if (ONCLOUD){ //if we are in maven and on the cloud or if we aren't on maven and are on the cloud
 			Map<String,String> queues= new HashMap<String, String>(); 
-
+			
 			dispatchQueue= queues.get("dispatch");
 			returnQueue= queues.get("return");
 			if (dispatchQueue==null|| returnQueue==null){
@@ -101,7 +139,7 @@ public class Main {
 				System.exit(1);
 			}
 			try {
-				queues = GetQueueName.GetQueues(GetQueueName.GetInstanceID(), null);
+				queues = GetQueueName.GetQueues(GetQueueName.GetInstanceID(INSTANCEIDLOC), null);
 			} catch (IOException e) {
 				System.err.println("Error reading credentials file");
 				e.printStackTrace();
@@ -144,7 +182,7 @@ public class Main {
 			List<Message> messageList = GetMessageBundle(dispatchQueue, client);
 			if (messageList.size()==0){//if the queue didn't have any messages
 				try {
-					Thread.sleep(Long.valueOf(props.getProperty("waitTime")));
+					Thread.sleep(WAITTIME);
 				} catch (InterruptedException e) {
 					System.err.println("Waiting interrupted");
 					e.printStackTrace();
@@ -270,7 +308,7 @@ public class Main {
 
 
 				//call vina
-				Callable<String> callable = new VinaCaller(moleculeFileName, receptorFileName, unMarshalledUnit.getVinaParams());
+				Callable<String> callable = new VinaCaller(moleculeFileName, receptorFileName, unMarshalledUnit.getVinaParams(), VINALOC);
 				ExecutorService executor = new ScheduledThreadPoolExecutor(1);
 				Future<String> returnString = executor.submit(callable);
 				Long now =System.currentTimeMillis();

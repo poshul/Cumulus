@@ -69,13 +69,14 @@ public class GetQueueName {
 	
 	/**
 	 * 
+	 * @param instanceIdLoc TODO
 	 * @return the unique instance ID of this instance if run on an EC2 instance or null otherwise
 	 */
-	public static String GetInstanceID() throws IllegalStateException{
+	public static String GetInstanceID(String instanceIdLoc) throws IllegalStateException{
 		String responseBody=null;
 		HttpClient httpClient = new DefaultHttpClient();
 		try{
-			HttpGet httpGet= new HttpGet(Constants.INSTANCEIDLOC);
+			HttpGet httpGet= new HttpGet(instanceIdLoc);
 			ResponseHandler<String> responseHandler = new BasicResponseHandler();
             responseBody = httpClient.execute(httpGet, responseHandler);
 		} catch (ClientProtocolException e) {

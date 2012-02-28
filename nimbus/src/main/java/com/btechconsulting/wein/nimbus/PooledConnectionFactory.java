@@ -1,5 +1,6 @@
 package com.btechconsulting.wein.nimbus;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -26,6 +27,31 @@ public enum PooledConnectionFactory {
 	private DataSource cumulusDatasource= null;
 	
 	private PooledConnectionFactory() {
+		//get Properties file
+		Boolean mvn= false; //this tracks if we are being run from the maven build, and whether to take properties from constants for nimbus.properties
+		java.util.Properties props= new java.util.Properties();
+		try {
+			props.load( Main.class.getResourceAsStream(Constants.NIMBUSPROPSFILE));
+			mvn=true;
+		} catch (IOException e4) {
+			//this means we couldn't load the properties file, so we default to the settings in constants.
+			e4.printStackTrace();
+			mvn=false;
+		}
+		//see comment about Boolean mvn
+		String JDBCURL;
+		String JDBCPASSWORD;
+		String JDBCUSER;
+		if (mvn==true){
+			JDBCURL=  props.getProperty("JDBCURL");
+			JDBCUSER= props.getProperty("JDBCUser");
+			JDBCPASSWORD= props.getProperty("JDBCPassword");
+		}else{
+			JDBCURL=  Constants.JDBCURL;
+			JDBCUSER= Constants.JDBCUSER;
+			JDBCPASSWORD= Constants.JDBCPASSWORD;
+		}
+		
 		try{
             Class.forName ("com.mysql.jdbc.Driver").newInstance();
 		}
@@ -35,11 +61,12 @@ public enum PooledConnectionFactory {
 		}
 		
 		//check to make sure that JDBCurl is defined
-		if (Constants.JDBCURL==null||Constants.JDBBPASSWORD==null||Constants.JDBCUSER==null){
+		//this checks the Constants class if we are being run without maven, and the nimbus.properties file otherwise
+		if (JDBCURL==null||JDBCPASSWORD==null||JDBCUSER==null){
 			throw new IllegalStateException("Couldn't find configuration parameters for JDBC");
 		}
 		ObjectPool cumulusConnectionPool= new GenericObjectPool(null);
-		ConnectionFactory cumulusConnectionFactory= new DriverManagerConnectionFactory(Constants.JDBCURL, Constants.JDBCUSER, Constants.JDBBPASSWORD);
+		ConnectionFactory cumulusConnectionFactory= new DriverManagerConnectionFactory(JDBCURL, JDBCUSER, JDBCPASSWORD);
 		@SuppressWarnings("unused")
 		PoolableConnectionFactory cumulusPoolableConnectionFactory = new PoolableConnectionFactory(cumulusConnectionFactory, cumulusConnectionPool, null, null, false, true);
 		cumulusDatasource= new PoolingDataSource(cumulusConnectionPool);

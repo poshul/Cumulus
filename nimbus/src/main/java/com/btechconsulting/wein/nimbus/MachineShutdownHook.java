@@ -8,7 +8,7 @@ class MachineShutdownHook extends Thread {
 	 * This shuts down the machine (not JVM) that java is running on.
 	 */
 	public void run(){
-
+/*
 		try {
 			
 			Process process = new ProcessBuilder(Constants.SHUTDOWNCOMMAND,Constants.SHUTDOWNMODIFIER,"now").start();
@@ -17,6 +17,6 @@ class MachineShutdownHook extends Thread {
 			System.err.println("couldn't shutdown, this is BAD"); //TODO email me here
 			e.printStackTrace();
 		}
-
+*/
 	}
 }

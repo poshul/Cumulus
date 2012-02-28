@@ -89,6 +89,7 @@
 				<resources>
 					<resource>
 						<directory>resources</directory>
+						<filtering>true</filtering>
 						<targetPath>resources</targetPath>
 					</resource>
 				</resources>
@@ -112,6 +113,7 @@
 				<resources>
 					<resource>
 						<directory>resources</directory>
+						<filtering>true</filtering>
 						<targetPath>resources</targetPath>
 					</resource>
 				</resources>
@@ -125,7 +127,7 @@
 				<waitTime>600000</waitTime>
 				<JDBCURL>jdbc:mysql://helix.b-techconsulting.com/cumulus</JDBCURL>
 				<JDBCUser>cumulus</JDBCUser>
-				<JDBCPassword>cumulus</JDBCPassword>
+				<JDBCPassword>s3mir4ndom</JDBCPassword>
 				<onCloud>true</onCloud>
 			</properties>
 		</profile>

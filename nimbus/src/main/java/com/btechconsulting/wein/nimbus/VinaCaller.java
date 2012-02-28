@@ -24,13 +24,14 @@ import com.btechconsulting.wein.nimbus.model.VinaParams;
 public class VinaCaller implements Callable<String> {
 	private String moleculeFile;
 	private String receptorFile;
-
+	private String vinaLoc;
 	private VinaParams vinaParams;
 
-	public VinaCaller(String moleculeFile, String receptorFile, VinaParams vinaParams) {
+	public VinaCaller(String moleculeFile, String receptorFile, VinaParams vinaParams, String vinaLoc) {
 		this.moleculeFile = moleculeFile;
 		this.receptorFile = receptorFile;
 		this.vinaParams = vinaParams;
+		this.vinaLoc = vinaLoc;
 	}
 	
 	/**
@@ -80,7 +81,7 @@ public class VinaCaller implements Callable<String> {
 	public String call() throws Exception {
 		List<String> command= new ArrayList<String>();
 		String outLocation=this.moleculeFile+".out";
-		command.add(Constants.VINALOC);
+		command.add(this.vinaLoc);
 		command.add("--receptor");
 		command.add(this.receptorFile);
 		command.add("--ligand");
