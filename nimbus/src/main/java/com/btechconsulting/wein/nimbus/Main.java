@@ -52,6 +52,8 @@ import com.btechconsulting.wein.nimbus.model.WorkUnit;
  */
 public class Main {
 
+	
+	final static Logger logger = Logger.getLogger(Main.class);
 	/**
 	 * This is the class that runs on startup of the Nimbus
 	 * @param args
@@ -70,12 +72,11 @@ public class Main {
 					// THIS IS VERY BAD
 					e.printStackTrace();
 				}*/
-				System.out.println("in : run () : shutdownHook");
-				System.out.println("Shutdown hook completed...");
+				logger.info("in : run () : shutdownHook");
+				logger.info("Shutdown hook completed...");
 			}
 		});
 		
-		final Logger logger = Logger.getLogger(Main.class);
 		//get Properties file
 		Boolean mvn= false; //this tracks if we are being run from the maven build, and whether to take properties from constants for nimbus.properties
 		java.util.Properties props= new java.util.Properties();
@@ -114,15 +115,15 @@ public class Main {
 					Main.class.getResourceAsStream(CREDENTIALSFILE));
 			//new FileInputStream(Constants.CREDENTIALSFILE));
 		} catch (FileNotFoundException e1) {
-			System.err.println("Error reading credentials file");
+			logger.error("Error reading credentials file");
 			e1.printStackTrace();
 			System.exit(1);
 		} catch (IOException e) {
-			System.err.println("Error reading credentials file");
+			logger.error("Error reading credentials file");
 			e.printStackTrace();
 			System.exit(1);
 		} if (credentials==null){
-			System.err.println("Error reading credentials file, not caught.");
+			logger.error("Error reading credentials file, not caught.");
 			//we should never reach here if we do it indicates a flow problem
 			System.exit(2);
 		}
@@ -135,17 +136,17 @@ public class Main {
 			dispatchQueue= queues.get("dispatch");
 			returnQueue= queues.get("return");
 			if (dispatchQueue==null|| returnQueue==null){
-				System.err.println("Couldn't get queue names");
+				logger.error("Couldn't get queue names");
 				System.exit(1);
 			}
 			try {
 				queues = GetQueueName.GetQueues(GetQueueName.GetInstanceID(INSTANCEIDLOC), null);
 			} catch (IOException e) {
-				System.err.println("Error reading credentials file");
+				logger.error("Error reading credentials file");
 				e.printStackTrace();
 				System.exit(1);
 			} catch (IllegalStateException e) {
-				System.err.println("Internal Error");
+				logger.error("Internal Error");
 				e.printStackTrace();
 				System.exit(1);
 			}
@@ -163,7 +164,7 @@ public class Main {
 			conn = PooledConnectionFactory.INSTANCE.getCumulusConnection();
 			stmt = conn.createStatement();
 		} catch (SQLException e2) {
-			System.err.println("Couldn't connect to SQL server");
+			logger.error("Couldn't connect to SQL server");
 			e2.printStackTrace();
 			System.exit(1);
 		}
@@ -176,7 +177,7 @@ public class Main {
 				Thread.sleep(1000); // This guarantees that we will not query the SQS more than once a second
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
-				System.err.println("Waiting between requests to sqs was interrupted");
+				logger.error("Waiting between requests to sqs was interrupted");
 				System.exit(2);
 			} 
 			List<Message> messageList = GetMessageBundle(dispatchQueue, client);
@@ -184,21 +185,21 @@ public class Main {
 				try {
 					Thread.sleep(WAITTIME);
 				} catch (InterruptedException e) {
-					System.err.println("Waiting interrupted");
+					logger.error("Waiting interrupted");
 					e.printStackTrace();
 					System.exit(2);
 				}
 				messageList = GetMessageBundle(dispatchQueue, client);
 				if (messageList.size()==0){//if the queue still didn't have any messages we die of boredom
-					System.err.println("We ran out of work");
+					logger.error("We ran out of work");
 					System.exit(0);
 				}
 			}if (messageList.size()>1){// if we somehow get too many messages
-				System.err.println("we got too many messages");
+				logger.error("we got too many messages");
 				System.exit(2);
 			}
 			//Retrieve workunit
-			System.out.println("Got workunit");
+			logger.info("Got workunit");
 			String receiptHandle= messageList.get(0).getReceiptHandle();
 			String marshalledWorkUnit= messageList.get(0).getBody();
 			//unmarshall workunit
@@ -208,13 +209,13 @@ public class Main {
 			}
 
 			catch (JAXBException e) {
-				System.err.println("Couldn't unmarshall WorkUnit");
+				logger.error("Couldn't unmarshall WorkUnit");
 				// TODO: handle exception send error to queue
 			}
 
 			if (unMarshalledUnit==null){
 				//TODO: handle malformed work unit
-				System.err.println("Unmarshalled work unit is null");
+				logger.error("Unmarshalled work unit is null");
 			}
 
 			//generate the skeleton of the returnUnit
@@ -237,7 +238,7 @@ public class Main {
 					numResults=duplicateResults.getInt(1);
 				}
 			} catch (SQLException e3) {
-				System.err.println("couldn't check on duplicate status");
+				logger.error("couldn't check on duplicate status");
 				e3.printStackTrace();
 				//if we can't get duplicate status die
 				System.exit(1);
@@ -246,7 +247,7 @@ public class Main {
 				//get receptor and molecule from sql
 				String receptorQuery= "SELECT pdbqtfile FROM cumulus.receptor WHERE sha256='"+unMarshalledUnit.getPointerToReceptor()+"' AND( owner_id='"+unMarshalledUnit.getOwnerID()+"' "+"OR owner_id='0');";
 				String moleculeQuery= "SELECT pdbqt FROM cumulus.mol_properties WHERE compound_id='"+unMarshalledUnit.getPointerToMolecule()+"' AND( owner_id='"+unMarshalledUnit.getOwnerID()+"' "+"OR owner_id='0');";
-				//System.out.println(moleculeQuery);
+				//logger.info(moleculeQuery);
 				String receptorString=null;
 				String moleculeString=null;
 				try {
@@ -266,22 +267,22 @@ public class Main {
 					}
 
 					if (numMResults<1||numRResults<1){
-						System.err.println("Couldn't find either molecule or receptor");
+						logger.error("Couldn't find either molecule or receptor");
 						//TODO send error here
 					}
 
 					if (numRResults>1){
-						System.err.println("We had a collision in receptor results");
+						logger.error("We had a collision in receptor results");
 						//TODO send error here
 					}
 
 					if (numMResults>1){
-						System.err.println("We had a collision in molecule results");
+						logger.error("We had a collision in molecule results");
 						//TODO send error here
 					}
 
 				} catch (SQLException e2) {
-					System.err.println("Couldn't retrieve data from SQL");
+					logger.error("Couldn't retrieve data from SQL");
 					e2.printStackTrace();
 					System.exit(1);
 				}
@@ -301,7 +302,7 @@ public class Main {
 					mOut.close();
 					rOut.close();
 				} catch (FileNotFoundException e2) {
-					System.err.println("Error creating file");
+					logger.error("Error creating file");
 					e2.printStackTrace();
 					System.exit(1);
 				}
@@ -319,7 +320,7 @@ public class Main {
 						Thread.sleep(1000); //check whether we are finished each second.
 					} catch (InterruptedException e) {
 						e.printStackTrace();
-						System.err.println("We were interrupted");
+						logger.error("We were interrupted");
 						System.exit(2);
 					}
 				}
@@ -334,7 +335,7 @@ public class Main {
 								Thread.sleep(1000); //check whether we are finished each second.
 							} catch (InterruptedException e) {
 								e.printStackTrace();
-								System.err.println("We were interrupted");
+								logger.error("We were interrupted");
 								System.exit(2);
 							}
 						}
@@ -347,7 +348,7 @@ public class Main {
 							SendStatusToReturnQueue(client, returnQueue, returnU);
 						} catch (JAXBException e) {
 							e.printStackTrace();
-							System.err.println("Problem marshalling return unit");
+							logger.error("Problem marshalling return unit");
 							System.exit(1);
 						}
 						DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
@@ -355,14 +356,14 @@ public class Main {
 				}else {
 
 					try {
-						System.out.println(returnString.get());
+						logger.info(returnString.get());
 					} catch (InterruptedException e) {
 						e.printStackTrace();
-						System.err.println("Execution was interrupted.  This is bad");
+						logger.error("Execution was interrupted.  This is bad");
 						System.exit(2);
 					} catch (ExecutionException e) {
 						e.printStackTrace();
-						System.err.println("Vina exited abnormally");
+						logger.error("Vina exited abnormally");
 						//try to tell the return queue that we have an error
 						returnU.setStatus("ERROR");
 						try {
@@ -370,7 +371,7 @@ public class Main {
 							DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
 						} catch (JAXBException e1) {
 							e1.printStackTrace();
-							System.err.println("Multiple Internal errors");
+							logger.error("Multiple Internal errors");
 							System.exit(1);
 						}
 						System.exit(1);
@@ -403,13 +404,13 @@ public class Main {
 
 					//put results into sql
 					String resultsStatement="INSERT INTO cumulus.results (owner_id, job_id, workunit_id, results) VALUE('"+unMarshalledUnit.getOwnerID()+"','"+unMarshalledUnit.getJobID()+"','"+unMarshalledUnit.getWorkUnitID()+"','"+results+"');";
-					System.out.println(resultsStatement);
+					logger.info(resultsStatement);
 					try {
 
 						stmt.executeUpdate(resultsStatement);
 
 					} catch (SQLException e1) {
-						System.err.println("Couldn't put results into SQL");//TODO deal with duplicate key problems
+						logger.error("Couldn't put results into SQL");//TODO deal with duplicate key problems
 						e1.printStackTrace();
 						System.exit(1);
 					}
@@ -420,20 +421,20 @@ public class Main {
 						SendStatusToReturnQueue(client, returnQueue, returnU);
 					} catch (JAXBException jbe) {
 						jbe.printStackTrace();
-						System.err.println("Problem marshalling return unit");
+						logger.error("Problem marshalling return unit");
 						System.exit(1);
 					}
 					//delete workunit from dispatch queue
 					DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
 				}
 			}else{ //this can happen with SQS so we need to accept duplicate processing, in this case we trust the earlier computation
-				System.err.println("Result is already in database");
+				logger.error("Result is already in database");
 				returnU.setStatus("DONE");
 				try {
 					SendStatusToReturnQueue(client, returnQueue, returnU);
 				} catch (JAXBException jbe) {
 					jbe.printStackTrace();
-					System.err.println("Problem marshalling return unit");
+					logger.error("Problem marshalling return unit");
 					System.exit(1);
 				}
 				//delete workunit from dispatch queue
@@ -455,8 +456,8 @@ public class Main {
 				break;
 			}
 			catch (Exception e){ //this lets us recover from transient "queue does not exist" faults
-				System.err.println("Caught amazon exception");
-				System.err.println(e);
+				logger.error("Caught amazon exception");
+				logger.error(e);
 				retries++;
 				try {
 					Thread.sleep(1000);
@@ -469,7 +470,7 @@ public class Main {
 			}
 		}
 		if (retries>2){
-			System.err.println("Couldn't connect to AWS");
+			logger.error("Couldn't connect to AWS");
 			System.exit(1);
 		}
 		List<Message> messageList =result.getMessages();

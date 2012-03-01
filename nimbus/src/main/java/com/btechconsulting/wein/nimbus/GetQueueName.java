@@ -17,6 +17,7 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.log4j.Logger;
 
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
@@ -39,6 +40,8 @@ public class GetQueueName {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
+	
+	private static final Logger logger= Logger.getLogger(GetQueueName.class);
 	public static Map<String,String> GetQueues(String instanceID, PropertiesCredentials credentialsFile) throws IOException{
 		Map<String, String> returnMap= new HashMap<String, String>();
 		//Create the list of filters
