@@ -37,9 +37,12 @@ class SqsListener implements Runnable {
 			System.exit(1);
 		}
 		while (true){
-			ReceiveMessageRequest request= new ReceiveMessageRequest(Initializer.getInstance().getReturnQueue());
+			ReceiveMessageRequest request= new ReceiveMessageRequest(Initializer.getInstance().getReturnQueue()).withMaxNumberOfMessages(10);
 			List<Message> results =sqsClient.receiveMessage(request).getMessages();
 			List<DeleteMessageBatchRequestEntry> deleteList=new ArrayList<DeleteMessageBatchRequestEntry>();
+			if (results.size()>1){
+				System.out.println("got "+results.size()+" results");
+			}
 			for (Message i:results){
 				String marshalledResult=i.getBody();
 				ReturnUnit unMarshalledResult;
@@ -61,7 +64,7 @@ class SqsListener implements Runnable {
 				sqsClient.deleteMessageBatch(deleteRequests);
 			}
 			try {
-				Thread.sleep(1000); // this prevents us from polling constantly, running up a huge bill
+				Thread.sleep(1000); // this prevents us from polling constantly, running up a huge bill NB, we may end up adjusting this down for a heavily loaded server
 			} catch (InterruptedException e) {
 				System.err.println("Sqslistener was interrupted");
 				if (Initializer.getInstance(null).getShuttingDown()){

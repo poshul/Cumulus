@@ -103,8 +103,8 @@ public class Initializer {
 						System.err.println("No configuration found for RestServlet: " + credsName);
 						throw new ServletException("No configuration found for RestSearchAction: " + credsName);
 					}
-				credentials=new PropertiesCredentials(url.openStream());
-					
+					credentials=new PropertiesCredentials(url.openStream());
+
 				}
 				catch (IOException ioe) {
 					System.err.println(ioe.getMessage());
@@ -119,7 +119,8 @@ public class Initializer {
 			dispatchQueue = createQueue(sqsClient, Constants.dispatchQueueName);
 			returnQueue = createQueue(sqsClient, Constants.returnQueueName);
 			unitsOnServer= createUnitsOnServer();
-			//createInitialInstances();  //TODO change this back, EC2 creation is disabled for testing
+			//Thread.sleep(60000);//TODO figure out time to SQS stability
+			createInitialInstances();  //TODO change this back, EC2 creation is enabled for testing
 		}
 		catch (AmazonServiceException ase) {
 			System.err.println("Caught an AmazonServiceException, which means your request made it " +
@@ -129,18 +130,25 @@ public class Initializer {
 			System.err.println("AWS Error Code:   " + ase.getErrorCode());
 			System.err.println("Error Type:       " + ase.getErrorType());
 			System.err.println("Request ID:       " + ase.getRequestId());
+			//System.exit(1);
 		}
 		catch (AmazonClientException ace) {
 			System.err.println("Caught an AmazonClientException, which means the client encountered " +
 					"a serious internal problem while trying to communicate with AWS, such as not " +
 					"being able to access the network.");
 			System.err.println("Error Message: " + ace.getMessage());
+			//System.exit(1);
+
 		}
 		catch (NullPointerException npee){
 			System.err.println("Couldn't find credentials file\n");
+			//System.exit(1);
+
 		}
 		catch (Exception e){
 			System.err.println(e);
+			//System.exit(1);
+
 		}
 
 		//start the SQSListener
@@ -239,10 +247,14 @@ public class Initializer {
 			System.err.println("Reponse Status Code: " + e.getStatusCode());
 			System.err.println("Error Code: " + e.getErrorCode());
 			System.err.println("Request ID: " + e.getRequestId());
+			//System.exit(1);
 		} catch (Exception e) {
 			//caught another exception
 			System.err.println(e);
-			System.err.println("Did not exit cleanly");}
+			System.err.println("Did not exit cleanly");
+			//System.exit(1);
+		}
+
 		System.out.println("Killed all cumulus drones");
 	}
 
