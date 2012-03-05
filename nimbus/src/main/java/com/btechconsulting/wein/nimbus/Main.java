@@ -181,22 +181,32 @@ public class Main {
 				System.exit(2);
 			} 
 			List<Message> messageList = GetMessageBundle(dispatchQueue, client);
-			if (messageList.size()==0){//if the queue didn't have any messages
+			Long timer = 0L;
+			while (messageList.size()==0){//if the queue didn't have any messages
+				if (timer==0L){//if we haven't started the timer
+					logger.debug("No work now");
+					timer=System.currentTimeMillis();
+				}if (System.currentTimeMillis()-timer>WAITTIME){//if we have waited as long as we can
+					logger.error("We ran out of work");
+					System.exit(0);
+				}
 				try {
-					Thread.sleep(WAITTIME);
+					Thread.sleep(1000); //wait 1 second
 				} catch (InterruptedException e) {
 					logger.error("Waiting interrupted");
 					e.printStackTrace();
 					System.exit(2);
 				}
 				messageList = GetMessageBundle(dispatchQueue, client);
-				if (messageList.size()==0){//if the queue still didn't have any messages we die of boredom
+/*				if (messageList.size()==0){//if the queue still didn't have any messages we die of boredom
 					logger.error("We ran out of work");
 					System.exit(0);
-				}
+				}*/
 			}if (messageList.size()>1){// if we somehow get too many messages
 				logger.error("we got too many messages");
 				System.exit(2);
+			}if (messageList.size()==1){ //If we have a message reset the times
+				timer=0L;
 			}
 			//Retrieve workunit
 			logger.info("Got workunit");
