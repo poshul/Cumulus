@@ -7,6 +7,8 @@ import java.util.List;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
+import org.apache.log4j.Logger;
+
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchRequest;
@@ -21,9 +23,10 @@ class SqsListener implements Runnable {
 	 * This class creates the thread that picks up results from the SQS.
 	 * It is important that the Listener not die
 	 */
+	static final Logger logger=Logger.getLogger(SqsListener.class);
 
 	public void run() {
-		System.out.println("entered thread");
+		logger.info("entered thread");
 		AmazonSQSClient sqsClient=new AmazonSQSClient(Initializer.getInstance().getCredentials());
 		javax.xml.bind.Unmarshaller unMarshaller = null;
 		try{
@@ -32,7 +35,7 @@ class SqsListener implements Runnable {
 		}
 		catch (JAXBException jbe){
 			//This exception is bad, and should result in the system terminating, as cleanly as possible
-			System.err.println("Cannot create unmarshaller for return queue");
+			logger.error("Cannot create unmarshaller for return queue");
 			Initializer.getInstance().teardownAll();
 			System.exit(1);
 		}
@@ -41,7 +44,7 @@ class SqsListener implements Runnable {
 			List<Message> results =sqsClient.receiveMessage(request).getMessages();
 			List<DeleteMessageBatchRequestEntry> deleteList=new ArrayList<DeleteMessageBatchRequestEntry>();
 			if (results.size()>1){
-				System.out.println("got "+results.size()+" results");
+				logger.info("got "+results.size()+" results");
 			}
 			for (Message i:results){
 				String marshalledResult=i.getBody();
@@ -50,13 +53,13 @@ class SqsListener implements Runnable {
 					unMarshalledResult = (ReturnUnit) unMarshaller.unmarshal(new StringReader(marshalledResult));
 					deleteList.add(new DeleteMessageBatchRequestEntry(i.getMessageId(),i.getReceiptHandle()));
 				} catch (JAXBException e) {
-					System.err.println("Malformed return unit");
-					System.err.println("Malformed unit:"+marshalledResult);
+					logger.error("Malformed return unit");
+					logger.error("Malformed unit:"+marshalledResult);
 					continue;
 				}
-				System.err.println(unMarshalledResult.getStatus());
+				logger.info(unMarshalledResult.getStatus());
 				Initializer.getInstance().putWorkUnit(unMarshalledResult.getOwnerID(), unMarshalledResult.getJobID(), unMarshalledResult.getWorkUnitID(),Initializer.wUStatus.valueOf(unMarshalledResult.getStatus()));//we get a null pointer exception here
-				System.out.println("got unit from queue");
+				logger.info("got unit from queue");
 			}
 			DeleteMessageBatchRequest deleteRequests=new DeleteMessageBatchRequest(Initializer.getInstance().getReturnQueue(), deleteList);
 			//after we have read the messages we delete them
@@ -66,7 +69,7 @@ class SqsListener implements Runnable {
 			try {
 				Thread.sleep(1000); // this prevents us from polling constantly, running up a huge bill NB, we may end up adjusting this down for a heavily loaded server
 			} catch (InterruptedException e) {
-				System.err.println("Sqslistener was interrupted");
+				logger.error("Sqslistener was interrupted");
 				if (Initializer.getInstance(null).getShuttingDown()){
 					break;
 				}
