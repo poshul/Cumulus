@@ -111,7 +111,6 @@ public class Main {
 			WAITTIME=Constants.WAITTIME;
 			ONCLOUD=Constants.ONCLOUD;
 		}
-		System.out.println(ONCLOUD); //TODO remove me
 
 		//Get the queue names
 		PropertiesCredentials credentials = null;
@@ -136,7 +135,7 @@ public class Main {
 		String dispatchQueue=null;
 		String returnQueue=null;
 		if (ONCLOUD){ //if we are in maven and on the cloud or if we aren't on maven and are on the cloud
-			logger.warn("On cloud"); //TODO remove
+			logger.debug("On cloud");
 			Map<String,String> queues= new HashMap<String, String>(); 
 			try {
 				queues = GetQueueName.GetQueues(GetQueueName.GetInstanceID(INSTANCEIDLOC), credentials);
@@ -153,7 +152,9 @@ public class Main {
 			returnQueue= queues.get("return");
 			if (dispatchQueue==null|| returnQueue==null){
 				logger.error("Couldn't get queue names");
-				System.exit(1);
+				logger.warn("Falling back to hardcoded queuenames");
+				dispatchQueue= "https://queue.amazonaws.com/157399895577/dispatchQueue";
+				returnQueue= "https://queue.amazonaws.com/157399895577/returnQueue";
 			}
 			
 		} else{ //If we are not running from an ec2 instance take static queue names
@@ -227,11 +228,11 @@ public class Main {
 
 			catch (JAXBException e) {
 				logger.error("Couldn't unmarshall WorkUnit");
-				// TODO: handle exception send error to queue
+				// Need to notify administrator here TODO
 			}
 
 			if (unMarshalledUnit==null){
-				//TODO: handle malformed work unit
+				//TODO: Notify administrator
 				logger.error("Unmarshalled work unit is null");
 			}
 
@@ -285,17 +286,41 @@ public class Main {
 
 					if (numMResults<1||numRResults<1){
 						logger.error("Couldn't find either molecule or receptor");
-						//TODO send error here
+						returnU.setStatus("ERROR");
+						try {
+							SendStatusToReturnQueue(client, returnQueue, returnU);
+							DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
+						} catch (JAXBException e1) {
+							e1.printStackTrace();
+							logger.error("Multiple Internal errors");
+							System.exit(1);
+						}
 					}
 
 					if (numRResults>1){
 						logger.error("We had a collision in receptor results");
-						//TODO send error here
+						returnU.setStatus("ERROR");
+						try {
+							SendStatusToReturnQueue(client, returnQueue, returnU);
+							DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
+						} catch (JAXBException e1) {
+							e1.printStackTrace();
+							logger.error("Multiple Internal errors");
+							System.exit(1);
+						}
 					}
 
 					if (numMResults>1){
 						logger.error("We had a collision in molecule results");
-						//TODO send error here
+						returnU.setStatus("ERROR");
+						try {
+							SendStatusToReturnQueue(client, returnQueue, returnU);
+							DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
+						} catch (JAXBException e1) {
+							e1.printStackTrace();
+							logger.error("Multiple Internal errors");
+							System.exit(1);
+						}
 					}
 
 				} catch (SQLException e2) {
@@ -304,7 +329,7 @@ public class Main {
 					System.exit(1);
 				}
 
-				//store receptor and molecule on disk TODO
+				//store receptor and molecule on disk
 				String receptorFileName="/tmp/receptor.pdbqt";
 				String moleculeFileName="/tmp/molecule.pdbqt";
 				File receptorFile= new File(receptorFileName);
@@ -320,6 +345,15 @@ public class Main {
 					rOut.close();
 				} catch (FileNotFoundException e2) {
 					logger.error("Error creating file");
+					returnU.setStatus("ERROR");
+					try {
+						SendStatusToReturnQueue(client, returnQueue, returnU);
+						DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
+					} catch (JAXBException e1) {
+						e1.printStackTrace();
+						logger.error("Multiple Internal errors");
+						System.exit(1);
+					}
 					e2.printStackTrace();
 					System.exit(1);
 				}
@@ -397,7 +431,7 @@ public class Main {
 
 					//load results from disk
 					String results= null;
-					String resultsFileName= moleculeFileName+".out";//location of the outfile is hardcodes in VinaCaller, this is bad TODO fix it
+					String resultsFileName= moleculeFileName+".out";//location of the outfile is hardcoded in VinaCaller, this is bad TODO fix it
 					File resultsFile = new File(resultsFileName);
 
 					try {
