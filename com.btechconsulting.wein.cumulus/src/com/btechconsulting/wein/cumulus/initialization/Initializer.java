@@ -58,6 +58,7 @@ public class Initializer {
 	private Marshaller workUnitMarshaller;
 	private PropertiesCredentials credentials;
 	private Thread sqsListener;
+	private Thread gridManager;
 	private Boolean shuttingDown=false;
 	// units on server is a map of OwnerID to a map of JobID to a map of WorkUnitID to work Unit status
 	// TODO figure out how to get unit testing to work when this is private
@@ -120,7 +121,8 @@ public class Initializer {
 			returnQueue = createQueue(sqsClient, Constants.returnQueueName);
 			unitsOnServer= createUnitsOnServer();
 			//Thread.sleep(60000);//TODO figure out time to SQS stability
-			createInitialInstances();  //TODO change this back, EC2 creation is enabled for testing
+			//createInstances(new AmazonEC2Client(this.credentials), Constants.initialInstances);
+			//createInitialInstances();  //TODO change this back, EC2 creation is enabled for testing
 		}
 		catch (AmazonServiceException ase) {
 			System.err.println("Caught an AmazonServiceException, which means your request made it " +
@@ -152,12 +154,22 @@ public class Initializer {
 		}
 
 		//start the SQSListener
-		sqsListener = new Thread(new SqsListener());
+		sqsListener = new Thread(new SqsListener(this));
 		sqsListener.setName("sqsListener");
+		//sqsListener.setDaemon(true);
 		sqsListener.start();//FIXME
+		
+		//start the gridManager
+		gridManager = new Thread(new GridManager(this));
+		gridManager.setName("gridManager");
+		gridManager.start();
 
 	}
-
+	
+	/*@deprecated
+	 * this is to be replaced with the more versatile createInstances
+	 */
+	@Deprecated
 	private void createInitialInstances() throws Exception {
 		AmazonEC2 ec2= new AmazonEC2Client(this.credentials);
 		//set the zone
@@ -169,6 +181,39 @@ public class Initializer {
 		.withImageId(Constants.imageID)
 		.withMinCount(Constants.initialInstances)
 		.withMaxCount(Constants.initialInstances)
+		.withSecurityGroupIds(Constants.securityGroupID)
+		.withKeyName(Constants.keyName);
+
+		RunInstancesResult runInstances = ec2.runInstances(runInstancesRequest);
+		System.out.println(runInstances.toString());
+
+		//tag the instances with the dispatch and return queues
+		List<Instance> instances = runInstances.getReservation().getInstances();
+		for (Instance instance : instances) {
+			CreateTagsRequest createTagsRequest = new CreateTagsRequest();
+			createTagsRequest.withResources(instance.getInstanceId()) //
+			.withTags(new Tag("dispatch", this.dispatchQueue))
+			.withTags(new Tag("return", this.returnQueue));
+			ec2.createTags(createTagsRequest);
+		}
+	}
+	
+	/*
+	 * @param ec2: an ec2 client
+	 * @param instancesIn: the number of instances to create
+	 * This creates a specified number of instances of nimbus
+	 */
+	void createInstances(AmazonEC2Client ec2, Integer instancesIn) throws Exception {
+
+		//set the zone
+		ec2.setEndpoint(Constants.ec2Region);
+		System.out.println("Intializing "+instancesIn+" instances\n");
+		//create EC2 instances
+		RunInstancesRequest runInstancesRequest = new RunInstancesRequest()
+		.withInstanceType(Constants.instanceType)
+		.withImageId(Constants.imageID)
+		.withMinCount(1)
+		.withMaxCount(instancesIn)
 		.withSecurityGroupIds(Constants.securityGroupID)
 		.withKeyName(Constants.keyName);
 
@@ -211,7 +256,8 @@ public class Initializer {
 	 */
 	public void teardownAll(){
 		this.shuttingDown=true;
-		this.sqsListener.interrupt();
+		//this.sqsListener.interrupt();//FIXME
+		this.gridManager.interrupt();
 		sqsClient.deleteQueue(new DeleteQueueRequest(dispatchQueue));
 		sqsClient.deleteQueue(new DeleteQueueRequest(returnQueue));
 		System.out.println("Deleted SQS queues");

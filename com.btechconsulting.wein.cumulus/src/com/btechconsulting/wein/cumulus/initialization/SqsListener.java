@@ -24,10 +24,15 @@ class SqsListener implements Runnable {
 	 * It is important that the Listener not die
 	 */
 	static final Logger logger=Logger.getLogger(SqsListener.class);
+	Initializer papa;
+	
+	public SqsListener(Initializer parent) {
+		this.papa=parent;
+	}
 
 	public void run() {
-		logger.info("entered thread");
-		AmazonSQSClient sqsClient=new AmazonSQSClient(Initializer.getInstance().getCredentials());
+		logger.info("Started SqsListener");
+		AmazonSQSClient sqsClient=new AmazonSQSClient(papa.getCredentials());
 		javax.xml.bind.Unmarshaller unMarshaller = null;
 		try{
 			JAXBContext context= JAXBContext.newInstance(ReturnUnit.class);
@@ -36,11 +41,11 @@ class SqsListener implements Runnable {
 		catch (JAXBException jbe){
 			//This exception is bad, and should result in the system terminating, as cleanly as possible
 			logger.error("Cannot create unmarshaller for return queue");
-			Initializer.getInstance().teardownAll();
+			papa.teardownAll();
 			System.exit(1);
 		}
 		while (true){
-			ReceiveMessageRequest request= new ReceiveMessageRequest(Initializer.getInstance().getReturnQueue()).withMaxNumberOfMessages(10);
+			ReceiveMessageRequest request= new ReceiveMessageRequest(papa.getReturnQueue()).withMaxNumberOfMessages(10);
 			List<Message> results =sqsClient.receiveMessage(request).getMessages();
 			List<DeleteMessageBatchRequestEntry> deleteList=new ArrayList<DeleteMessageBatchRequestEntry>();
 			if (results.size()>1){
@@ -58,10 +63,10 @@ class SqsListener implements Runnable {
 					continue;
 				}
 				logger.info(unMarshalledResult.getStatus());
-				Initializer.getInstance().putWorkUnit(unMarshalledResult.getOwnerID(), unMarshalledResult.getJobID(), unMarshalledResult.getWorkUnitID(),Initializer.wUStatus.valueOf(unMarshalledResult.getStatus()));//we get a null pointer exception here
+				papa.putWorkUnit(unMarshalledResult.getOwnerID(), unMarshalledResult.getJobID(), unMarshalledResult.getWorkUnitID(),Initializer.wUStatus.valueOf(unMarshalledResult.getStatus()));//we get a null pointer exception here
 				logger.info("got unit from queue");
 			}
-			DeleteMessageBatchRequest deleteRequests=new DeleteMessageBatchRequest(Initializer.getInstance().getReturnQueue(), deleteList);
+			DeleteMessageBatchRequest deleteRequests=new DeleteMessageBatchRequest(papa.getReturnQueue(), deleteList);
 			//after we have read the messages we delete them
 			if (deleteList.size()>0){ // we can only delete if we have request of things to delete
 				sqsClient.deleteMessageBatch(deleteRequests);
@@ -70,7 +75,7 @@ class SqsListener implements Runnable {
 				Thread.sleep(1000); // this prevents us from polling constantly, running up a huge bill NB, we may end up adjusting this down for a heavily loaded server
 			} catch (InterruptedException e) {
 				logger.error("Sqslistener was interrupted");
-				if (Initializer.getInstance(null).getShuttingDown()){
+				if (papa.getShuttingDown()){//FIXME
 					break;
 				}
 				else{
