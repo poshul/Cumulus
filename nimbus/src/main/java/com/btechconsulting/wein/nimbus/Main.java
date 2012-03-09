@@ -82,10 +82,12 @@ public class Main {
 		Boolean mvn= false; //this tracks if we are being run from the maven build, and whether to take properties from constants for nimbus.properties
 		java.util.Properties props= new java.util.Properties();
 		try {
+			logger.debug("loading properties file");
 			props.load( Main.class.getResourceAsStream(Constants.NIMBUSPROPSFILE));
 			mvn=true;
 		} catch (IOException e4) {
 			//this means we couldn't load the properties file, so we default to the settings in constants.
+			logger.warn("Couldn't load .properties file");
 			e4.printStackTrace();
 			mvn=false;
 		}
@@ -95,19 +97,21 @@ public class Main {
 		Integer WAITTIME;
 		Boolean ONCLOUD;
 		if (mvn==true){
+			logger.info("Using properties file");
 			VINALOC=props.getProperty("vinaLoc");
 			CREDENTIALSFILE=props.getProperty("credentialsFile");
 			INSTANCEIDLOC=props.getProperty("instanceIdLoc");
 			WAITTIME=Integer.parseInt(props.getProperty("waitTime"));
-			ONCLOUD=Boolean.getBoolean(props.getProperty("onCloud"));
+			ONCLOUD=Boolean.valueOf(props.getProperty("onCloud"));
 		}else{
+			logger.warn("Using static properties");
 			VINALOC=Constants.VINALOC;
 			CREDENTIALSFILE=Constants.CREDENTIALSFILE;
 			INSTANCEIDLOC=Constants.INSTANCEIDLOC;
 			WAITTIME=Constants.WAITTIME;
 			ONCLOUD=Constants.ONCLOUD;
 		}
-		
+		System.out.println(ONCLOUD); //TODO remove me
 
 		//Get the queue names
 		PropertiesCredentials credentials = null;
@@ -132,16 +136,10 @@ public class Main {
 		String dispatchQueue=null;
 		String returnQueue=null;
 		if (ONCLOUD){ //if we are in maven and on the cloud or if we aren't on maven and are on the cloud
+			logger.warn("On cloud"); //TODO remove
 			Map<String,String> queues= new HashMap<String, String>(); 
-			
-			dispatchQueue= queues.get("dispatch");
-			returnQueue= queues.get("return");
-			if (dispatchQueue==null|| returnQueue==null){
-				logger.error("Couldn't get queue names");
-				System.exit(1);
-			}
 			try {
-				queues = GetQueueName.GetQueues(GetQueueName.GetInstanceID(INSTANCEIDLOC), null);
+				queues = GetQueueName.GetQueues(GetQueueName.GetInstanceID(INSTANCEIDLOC), credentials);
 			} catch (IOException e) {
 				logger.error("Error reading credentials file");
 				e.printStackTrace();
@@ -151,7 +149,15 @@ public class Main {
 				e.printStackTrace();
 				System.exit(1);
 			}
+			dispatchQueue= queues.get("dispatch");
+			returnQueue= queues.get("return");
+			if (dispatchQueue==null|| returnQueue==null){
+				logger.error("Couldn't get queue names");
+				System.exit(1);
+			}
+			
 		} else{ //If we are not running from an ec2 instance take static queue names
+			logger.warn("Off cloud");
 			dispatchQueue= "https://queue.amazonaws.com/157399895577/dispatchQueue";
 			returnQueue= "https://queue.amazonaws.com/157399895577/returnQueue";
 		}
