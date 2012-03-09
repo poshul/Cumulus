@@ -58,24 +58,25 @@ public class Main {
 	 * This is the class that runs on startup of the Nimbus
 	 * @param args
 	 */
+	
 	public static void main(String[] args) {
-		//TODO write shutdown hook here.
-		Runtime.getRuntime().addShutdownHook(new Thread() {
+		//the following code block is currently unused, since we are relying on the crontab to deal with machine shutdown
+		/*Runtime.getRuntime().addShutdownHook(new Thread() {
+			//TODO add call to amazon API to shutdown machine
 			public void run() {
-				/*try {  //DOESN'T WORK
+				try {
 					List<String> command= new ArrayList<String>();
-					command.add("/sbin/shutdown");//TODO get parameters from file
-					command.add("-k");
-					command.add("now");
+					command.add("rm");
+					command.add("/var/lock/nimbus");
 					Process process= new ProcessBuilder(command).start();
 				} catch (IOException e) {
 					// THIS IS VERY BAD
 					e.printStackTrace();
-				}*/
+				}
 				logger.info("in : run () : shutdownHook");
 				logger.info("Shutdown hook completed...");
 			}
-		});
+		});*/
 		
 		//get Properties file
 		Boolean mvn= false; //this tracks if we are being run from the maven build, and whether to take properties from constants for nimbus.properties
