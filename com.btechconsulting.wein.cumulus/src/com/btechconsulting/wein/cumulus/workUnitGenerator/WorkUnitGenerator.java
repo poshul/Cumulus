@@ -3,7 +3,6 @@
  */
 package com.btechconsulting.wein.cumulus.workUnitGenerator;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -11,32 +10,19 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Future;
 
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
-import org.apache.log4j.Logger;
-
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.PropertiesCredentials;
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSAsync;
-import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
-import com.amazonaws.services.sqs.model.SendMessageBatchResult;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
-import com.btechconsulting.wein.cumulus.initialization.Constants;
 import com.btechconsulting.wein.cumulus.initialization.Initializer;
 import com.btechconsulting.wein.cumulus.initialization.Initializer.wUStatus;
 import com.btechconsulting.wein.cumulus.model.FilterParams;
 import com.btechconsulting.wein.cumulus.model.VinaParams;
 import com.btechconsulting.wein.cumulus.model.WorkUnit;
-import com.btechconsulting.wein.cumulus.web.rest.DoSearchHandler;
-import com.sun.jersey.core.util.Base64;
 
 /**
  * @author samuel
@@ -44,7 +30,7 @@ import com.sun.jersey.core.util.Base64;
  */
 public class WorkUnitGenerator {
 	
-	private final Logger logger= Logger.getLogger(WorkUnitGenerator.class);
+	//private final Logger logger= Logger.getLogger(WorkUnitGenerator.class);
 
 
 	public static Integer BuildJob(String receptor, String ownerID, VinaParams vinaParams, FilterParams filterParams) throws SQLException, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
@@ -63,10 +49,8 @@ public class WorkUnitGenerator {
 			SendMessageBatchRequestEntry entry=putWorkUnitInSQSBatch(BuildWorkUnit(receptorID, i, ownerID, jobID, workUnitId, vinaParams));
 			batch.add(entry);
 			Initializer.getInstance().putWorkUnit(ownerID, jobID, workUnitId, wUStatus.INFLIGHT);//TODO this needs to be atomic with the actual adding of the unit to sqs
-			//FIXME we aren't adding the unit to the workunitsonserverobject correctly
 			workUnitId++;
 			iter++;
-			//System.out.println(workUnitId); //TODO remove this
 			if (iter>=10){
 				SendMessageBatchRequest request= new SendMessageBatchRequest(Initializer.getInstance().getDispatchQueue(), batch);
 				//futures.add(Initializer.getInstance().getSqsClient().sendMessageBatchAsync(request));

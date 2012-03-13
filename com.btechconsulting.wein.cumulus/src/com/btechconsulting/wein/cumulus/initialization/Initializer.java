@@ -120,9 +120,7 @@ public class Initializer {
 			dispatchQueue = createQueue(sqsClient, Constants.dispatchQueueName);
 			returnQueue = createQueue(sqsClient, Constants.returnQueueName);
 			unitsOnServer= createUnitsOnServer();
-			//Thread.sleep(60000);//TODO figure out time to SQS stability
 			//createInstances(new AmazonEC2Client(this.credentials), Constants.initialInstances);
-			//createInitialInstances();  //TODO change this back, EC2 creation is enabled for testing
 		}
 		catch (AmazonServiceException ase) {
 			System.err.println("Caught an AmazonServiceException, which means your request made it " +
@@ -156,9 +154,7 @@ public class Initializer {
 		//start the SQSListener
 		sqsListener = new Thread(new SqsListener(this));
 		sqsListener.setName("sqsListener");
-		//sqsListener.setDaemon(true);
-		sqsListener.start();//FIXME
-		
+		sqsListener.start();		
 		//start the gridManager
 		gridManager = new Thread(new GridManager(this));
 		gridManager.setName("gridManager");
@@ -256,7 +252,7 @@ public class Initializer {
 	 */
 	public void teardownAll(){
 		this.shuttingDown=true;
-		//this.sqsListener.interrupt();//FIXME
+		this.sqsListener.interrupt();
 		this.gridManager.interrupt();
 		sqsClient.deleteQueue(new DeleteQueueRequest(dispatchQueue));
 		sqsClient.deleteQueue(new DeleteQueueRequest(returnQueue));

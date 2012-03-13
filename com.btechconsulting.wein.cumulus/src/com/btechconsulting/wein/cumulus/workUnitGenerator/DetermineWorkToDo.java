@@ -44,8 +44,7 @@ public class DetermineWorkToDo {
 			md = MessageDigest.getInstance("SHA-256");
 			byte[] bytes = md.digest(this.receptor.getBytes());
 			//encode the receptorID in base64
-			Base64 encoder = new Base64();
-			sha256=new String(encoder.encode(bytes));
+			sha256=new String(Base64.encode(bytes));
 			//query="SELECT count(*) FROM cumulus.mol_properties;";
 			query="SELECT count(*) FROM cumulus.receptor WHERE sha256=\'"+sha256+"\' and owner_id=\'"+this.ownerId+"\';";
 		} catch (NoSuchAlgorithmException e) {
@@ -84,11 +83,8 @@ public class DetermineWorkToDo {
 		if (this.filterParams.getSupplier()!=null || this.filterParams.getMinSuppliers()!=null){
 			query="SELECT distinct(mol_properties.compound_id) FROM cumulus.mol_properties, cumulus.supplier_properties WHERE (mol_properties.owner_id=\""+this.ownerId+"\" OR mol_properties.owner_id='0') AND (supplier_properties.owner_id=\""+this.ownerId+"\" OR supplier_properties.owner_id='0') AND mol_properties.compound_id=supplier_properties.compound_id ";
 			if (this.filterParams.getSupplier()!=null){
-				query=query.concat(" and supplier_properties.supplier="+this.filterParams.getSupplier());  //TODO doublecheck this
+				query=query.concat(" and supplier_properties.supplier="+this.filterParams.getSupplier());
 			}
-/*			if (this.filterParams.getMinSuppliers()!=null){
-				query=query.concat(" and cumulus.supplier_properties.count(distinct(supplier)>="+this.filterParams.getMinSuppliers());
-			}*///FIXME
 		}
 		else{
 			query="SELECT distinct(mol_properties.compound_id) FROM cumulus.mol_properties WHERE (mol_properties.owner_id=\""+this.ownerId+"\" OR mol_properties.owner_id=\"0\")";
@@ -172,7 +168,6 @@ public class DetermineWorkToDo {
 			newwork.PutReceptorInDatabase();
 			List<String> ids= newwork.FilterCompoundsInDatabase();
 			WorkUnitGenerator generator = new WorkUnitGenerator();
-			//System.out.println(ids);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

@@ -1,7 +1,5 @@
 package com.btechconsulting.wein.cumulus.initialization;
 
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 
 import com.amazonaws.AmazonServiceException;
@@ -10,11 +8,8 @@ import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Reservation;
-import com.amazonaws.services.ec2.model.RunInstancesRequest;
-import com.amazonaws.services.ec2.model.RunInstancesResult;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.GetQueueAttributesRequest;
-import com.amazonaws.services.sqs.model.GetQueueAttributesResult;
 
 public class GridManager implements Runnable {
 
@@ -108,6 +103,7 @@ public class GridManager implements Runnable {
 				} catch (Exception e) {
 					// TODO Deal with ec2 exceptions
 					e.printStackTrace();
+					continue;
 				}
 
 			}
@@ -115,7 +111,7 @@ public class GridManager implements Runnable {
 				Thread.sleep(60000); // we wait for any new servers to start up
 			} catch (InterruptedException e) {
 				logger.error("Sqslistener was interrupted");
-				if (papa.getShuttingDown()){//FIXME
+				if (papa.getShuttingDown()){
 					break;
 				}
 				else{
