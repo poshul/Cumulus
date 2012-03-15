@@ -91,6 +91,7 @@ public class DoReturnResultsHandler implements RestHandler {
 			}
 			//set up the response
 			response.setContentType("text/xml");
+			response.setStatus(200);
 			response.addIntHeader(JOBID, jobId);
 			//get the output stream
 			Writer out = response.getWriter();
@@ -109,7 +110,7 @@ public class DoReturnResultsHandler implements RestHandler {
 				e1.printStackTrace();
 			}
 			
-			//delete results from sql
+			/*//delete results from sql
 			query="DELETE FROM cumulus.results WHERE owner_id='"+ownerId+"' and job_id='"+jobId+"';";
 			try {
 				stmt.executeUpdate(query);
@@ -118,7 +119,7 @@ public class DoReturnResultsHandler implements RestHandler {
 				e.printStackTrace();
 			}
 			//delete job from local store
-			Initializer.getInstance().removeJobFromServer(ownerId, jobId);
+			Initializer.getInstance().removeJobFromServer(ownerId, jobId);*/
 
 		}else{
 			throw (new ServletException("Job is not finished yet"));

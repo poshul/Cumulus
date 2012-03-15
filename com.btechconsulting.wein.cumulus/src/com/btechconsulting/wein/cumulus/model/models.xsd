@@ -91,10 +91,15 @@
         </xs:sequence>
     </xs:complexType>
 
-    <xs:complexType name="NewCompound">
+<!--     <xs:complexType name="NewCompound">
     	<xs:sequence>
-    		<xs:element name="ownerID" type="string" maxOccurs="1" minOccurs="1"></xs:element>
-    		<xs:element name="Compound" type="string" maxOccurs="1" minOccurs="1"></xs:element>
+    		<xs:element name="ownerID" type="string" maxOccurs="1"
+    			minOccurs="1">
+    		</xs:element>
+    		<xs:element name="Compound_ID" type="string" maxOccurs="1" minOccurs="1"></xs:element>
+    		<xs:element name="Compound" type="string" maxOccurs="1"
+    			minOccurs="1">
+    		</xs:element>
     	</xs:sequence>
-    </xs:complexType>
+    </xs:complexType> -->
 </xs:schema>
