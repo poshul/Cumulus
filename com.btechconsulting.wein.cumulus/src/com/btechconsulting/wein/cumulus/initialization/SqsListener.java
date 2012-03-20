@@ -75,7 +75,9 @@ class SqsListener implements Runnable {
 				sqsClient.deleteMessageBatch(deleteRequests);
 			}
 			try {
-				Thread.sleep(1000); // this prevents us from polling constantly, running up a huge bill NB, we may end up adjusting this down for a heavily loaded server
+				if (results.size()!=10){
+					Thread.sleep(1000); // this prevents us from polling constantly, running up a huge bill NB, we may end up adjusting this down for a heavily loaded server
+				}
 			} catch (InterruptedException e) {
 				logger.error("Sqslistener was interrupted");
 				if (papa.getShuttingDown()){//FIXME
