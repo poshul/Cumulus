@@ -14,6 +14,8 @@ import java.util.List;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
+import org.apache.log4j.Logger;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
@@ -29,8 +31,8 @@ import com.btechconsulting.wein.cumulus.model.WorkUnit;
  *
  */
 public class WorkUnitGenerator {
-	
-	//private final Logger logger= Logger.getLogger(WorkUnitGenerator.class);
+
+	private final Logger logger= Logger.getLogger(WorkUnitGenerator.class);
 
 
 	public static Integer BuildJob(String receptor, String ownerID, VinaParams vinaParams, FilterParams filterParams) throws SQLException, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
@@ -62,11 +64,13 @@ public class WorkUnitGenerator {
 
 		}
 		//this catches the last <10
-		SendMessageBatchRequest request= new SendMessageBatchRequest(Initializer.getInstance().getDispatchQueue(), batch);
-		//futures.add(Initializer.getInstance().getSqsClient().sendMessageBatchAsync(request));
-		Initializer.getInstance().getSqsClient().sendMessageBatch(request);
-		System.out.println("batch sent");
-/*		while(futures.isEmpty()==false){
+		if (batch.size()>0){
+			SendMessageBatchRequest request= new SendMessageBatchRequest(Initializer.getInstance().getDispatchQueue(), batch);
+			//futures.add(Initializer.getInstance().getSqsClient().sendMessageBatchAsync(request));
+			Initializer.getInstance().getSqsClient().sendMessageBatch(request);
+			System.out.println("batch sent");
+		}
+		/*		while(futures.isEmpty()==false){
 			List<Future<SendMessageBatchResult>> toRemove= new ArrayList<Future<SendMessageBatchResult>>();
 			for (Future<SendMessageBatchResult>i:futures){
 				if(i.isDone()==true){
@@ -115,7 +119,7 @@ public class WorkUnitGenerator {
 		sqsClient.sendMessageAsync(new SendMessageRequest(Initializer.getInstance().getDispatchQueue(),marshalledUnit));*/
 		return entry;
 	}
-	
+
 	//this is largely for testing, it allows the sending of an individual workUnit to the server
 	public static void PutWorkUnitOnServer(WorkUnit workUnit) throws AmazonServiceException, InternalError, AmazonClientException, FileNotFoundException, JAXBException, IOException{
 		List<SendMessageBatchRequestEntry> batch=new ArrayList<SendMessageBatchRequestEntry>();

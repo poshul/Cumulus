@@ -43,12 +43,15 @@ class SqsListener implements Runnable {
 			papa.teardownAll();
 			System.exit(1);
 		}
+		int nummessages=0;//TODO remove this
+
 		while (true){
 			ReceiveMessageRequest request= new ReceiveMessageRequest(papa.getReturnQueue()).withMaxNumberOfMessages(10);
 			List<Message> results =sqsClient.receiveMessage(request).getMessages();
 			List<DeleteMessageBatchRequestEntry> deleteList=new ArrayList<DeleteMessageBatchRequestEntry>();
 			if (results.size()>1){
 				logger.info("got "+results.size()+" results");
+				System.out.println("got "+results.size()+" results");//TODO remove this
 			}
 			for (Message i:results){
 				String marshalledResult=i.getBody();
@@ -56,6 +59,7 @@ class SqsListener implements Runnable {
 				try {
 					unMarshalledResult = (ReturnUnit) unMarshaller.unmarshal(new StringReader(marshalledResult));
 					deleteList.add(new DeleteMessageBatchRequestEntry(i.getMessageId(),i.getReceiptHandle()));
+					nummessages++; //TODO remove this
 				} catch (JAXBException e) {
 					logger.error("Malformed return unit");
 					logger.error("Malformed unit:"+marshalledResult);

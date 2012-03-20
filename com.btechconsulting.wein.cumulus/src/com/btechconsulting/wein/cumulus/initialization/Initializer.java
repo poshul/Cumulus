@@ -34,8 +34,7 @@ import com.amazonaws.services.ec2.model.RunInstancesResult;
 import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSAsync;
-import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
+import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.DeleteQueueRequest;
 import com.btechconsulting.wein.cumulus.model.WorkUnit;
@@ -54,7 +53,7 @@ public class Initializer {
 	private static Initializer instance = null;
 	private String dispatchQueue;
 	private String returnQueue;
-	private AmazonSQSAsync sqsClient;
+	private AmazonSQS sqsClient;
 	private Marshaller workUnitMarshaller;
 	private PropertiesCredentials credentials;
 	private Thread sqsListener;
@@ -116,7 +115,7 @@ public class Initializer {
 			JAXBContext context = JAXBContext.newInstance(WorkUnit.class);
 			workUnitMarshaller = context.createMarshaller();
 			workUnitMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
-			sqsClient = new AmazonSQSAsyncClient(this.credentials);
+			sqsClient = new AmazonSQSClient(this.credentials);
 			dispatchQueue = createQueue(sqsClient, Constants.dispatchQueueName);
 			returnQueue = createQueue(sqsClient, Constants.returnQueueName);
 			unitsOnServer= createUnitsOnServer();
@@ -395,7 +394,7 @@ public class Initializer {
 	/**
 	 * @return the sqsClient
 	 */
-	public AmazonSQSAsync getSqsClient() {
+	public AmazonSQS getSqsClient() {
 		return sqsClient;
 	}
 
