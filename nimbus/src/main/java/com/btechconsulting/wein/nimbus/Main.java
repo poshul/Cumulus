@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+import javax.xml.bind.DatatypeConverter;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -293,7 +294,11 @@ public class Main {
 								System.exit(1);
 							}
 							break; //this breaks from the inner while true loop
-							}
+						}
+						
+						//Decode base64 encoded receptor
+						byte[] receptorByteArray = DatatypeConverter.parseBase64Binary(receptorString);
+						receptorString=new String(receptorByteArray);
 
 						if (numMResults<1||numRResults<1){
 							logger.error("Couldn't find either molecule or receptor");
@@ -453,7 +458,7 @@ public class Main {
 
 
 						//load results from disk
-						String results= null;
+						String results= new String();
 						String resultsFileName= moleculeFileName+".out";//location of the outfile is hardcoded in VinaCaller, this is bad TODO fix it
 						File resultsFile = new File(resultsFileName);
 
@@ -462,7 +467,7 @@ public class Main {
 							BufferedReader in = new BufferedReader(resultsReader);
 							String thisline= in.readLine();
 							while(thisline!=null){ //read until we hit the end of the file
-								results=results+thisline;
+								results=results+"\n"+thisline;
 								thisline=in.readLine();
 							}
 						} catch (FileNotFoundException e1) {
@@ -491,6 +496,9 @@ public class Main {
 						if (results==null){
 							results=unMarshalledUnit.getPointerToMolecule()+": No confirmations were found with submitted parameters";
 						}
+						
+						//Convert the results into base64
+						results=DatatypeConverter.printBase64Binary(results.getBytes());
 
 						//put results into sql
 						String resultsStatement="INSERT INTO cumulus.results (owner_id, job_id, workunit_id, results) VALUE('"+unMarshalledUnit.getOwnerID()+"','"+unMarshalledUnit.getJobID()+"','"+unMarshalledUnit.getWorkUnitID()+"','"+results+"');";
