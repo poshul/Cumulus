@@ -84,7 +84,10 @@ public class RestServlet extends HttpServlet{
 	}
 
 
-
+/*	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		doGet(request, response);
+	}
+	*/
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		doGet(request, response);
 	}

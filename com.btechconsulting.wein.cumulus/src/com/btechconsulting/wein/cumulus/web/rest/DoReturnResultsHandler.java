@@ -106,8 +106,8 @@ public class DoReturnResultsHandler implements RestHandler {
 				Marshaller m = context.createMarshaller();
 				m.marshal(results, out);
 			} catch (JAXBException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
+				throw new ServletException(e1);
 			}
 			
 			/*//delete results from sql

@@ -5,6 +5,7 @@ package com.btechconsulting.wein.cumulus.web.rest;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.Writer;
 import java.sql.SQLException;
 
 import javax.servlet.ServletException;
@@ -39,6 +40,7 @@ public class DoSearchHandler implements RestHandler {
 		String[] ownerIds= request.getParameterValues(OWNERID);
 		if (ownerIds==null|| ownerIds.length!=1){
 			logger.debug("User didn't supply an ownerId");
+			System.err.println(ownerIds);
 			throw new ServletException("You must supply an ownerId");
 		}
 		String ownerId=ownerIds[0];
@@ -95,6 +97,8 @@ public class DoSearchHandler implements RestHandler {
 			Integer jobId= WorkUnitGenerator.BuildJob(receptor, ownerId, vinaParamsObj, filterParamsObj);
 			response.setContentType("text/xml");
 			response.addIntHeader(JOBID, jobId);
+			Writer writer= response.getWriter();
+			writer.write(jobId);
 			//TODO return number of units created to 
 		} catch (AmazonServiceException ase) {
 			logger.error(ase);
