@@ -458,7 +458,7 @@ public class Main {
 
 
 						//load results from disk
-						String results= new String();
+						String results= new String("REMARK Compound name:"+unMarshalledUnit.getPointerToMolecule()+"\n");
 						String resultsFileName= moleculeFileName+".out";//location of the outfile is hardcoded in VinaCaller, this is bad TODO fix it
 						File resultsFile = new File(resultsFileName);
 
