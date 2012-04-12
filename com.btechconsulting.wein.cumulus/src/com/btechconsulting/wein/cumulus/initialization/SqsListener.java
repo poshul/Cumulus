@@ -80,7 +80,7 @@ class SqsListener implements Runnable {
 				}
 			} catch (InterruptedException e) {
 				logger.error("Sqslistener was interrupted");
-				if (papa.getShuttingDown()){//FIXME
+				if (papa.getShuttingDown()){
 					break;
 				}
 				else{

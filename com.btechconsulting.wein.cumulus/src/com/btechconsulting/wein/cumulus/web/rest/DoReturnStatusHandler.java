@@ -33,11 +33,11 @@ import com.btechconsulting.wein.cumulus.web.rest.RestHandler;
  * @author samuel
  *
  */
-public class DoReturnResultsHandler implements RestHandler {
+public class DoReturnStatusHandler implements RestHandler {
 
 	public static final String OWNERID="ownerId";
 	public static final String JOBID="jobId";
-	private final Logger logger= Logger.getLogger(DoReturnResultsHandler.class);
+	private final Logger logger= Logger.getLogger(DoReturnStatusHandler.class);
 
 
 
@@ -63,68 +63,25 @@ public class DoReturnResultsHandler implements RestHandler {
 		Integer jobId=Integer.valueOf(jobIds[0]);//TODO handle parse exception here
 		Boolean isDone=false;
 		try{
-			if(Initializer.getInstance().getNumberOfWorkUnitsInFlight(ownerId, jobId)==0){
-				isDone=true;
+			Integer numLeft=Initializer.getInstance().getNumberOfWorkUnitsInFlight(ownerId, jobId); 
+			//set up the response
+			response.setContentType("text/html");
+			response.setStatus(200);
+			response.addIntHeader(JOBID, jobId);
+			//get the output stream
+			Writer out = response.getWriter();
+			//only proceed if we are done
+			if (numLeft==0){
+				out.write("done");
+			}else{
+				out.write(numLeft.toString());
 			}
 		}
 		catch(IllegalStateException ise){
 			throw (new ServletException(ise.getMessage()));
 			//TODO deal with invalid owner and job ID's 
 		}
-		//only proceed if we are done
-		if (isDone){
-			//TODO parse all results, return a list of ERROR, and DONE
-
-			//get all of the results from the database
-			String query="SELECT results FROM cumulus.results WHERE owner_id='"+ownerId+"' AND job_id='"+jobId+"';";
-			List<String> resultpdbqts =new ArrayList<String>();
-			Statement stmt= null;
-			try {
-				//FIXME intermittant error here
-				stmt= PooledConnectionFactory.INSTANCE.getCumulusConnection().createStatement();
-				ResultSet results= stmt.executeQuery(query);
-				while (results.next()){ //go through all of the results that we have
-					resultpdbqts.add(results.getString(1));
-				}
-			} catch (SQLException e) {
-				// TODO deal with ramifications of a sql exception
-				e.printStackTrace();
-			}
-			//set up the response
-			response.setContentType("text/xml");
-			response.setStatus(200);
-			response.addIntHeader(JOBID, jobId);
-			//get the output stream
-			Writer out = response.getWriter();
-			//create a results object for the results.
-			Results results= new Results();
-			//put each result in the results object
-			for(String i:resultpdbqts){
-				results.getResult().add(i);
-			}
-			try {
-				JAXBContext context = JAXBContext.newInstance(Results.class);
-				Marshaller m = context.createMarshaller();
-				m.marshal(results, out);
-			} catch (JAXBException e1) {
-				e1.printStackTrace();
-				throw new ServletException(e1);
-			}
-			
-			/*//delete results from sql
-			query="DELETE FROM cumulus.results WHERE owner_id='"+ownerId+"' and job_id='"+jobId+"';";
-			try {
-				stmt.executeUpdate(query);
-			} catch (SQLException e) {
-				// TODO deal with ramifications of sql exception
-				e.printStackTrace();
-			}
-			//delete job from local store
-			Initializer.getInstance().removeJobFromServer(ownerId, jobId);*/
-
-		}else{
-			throw (new ServletException("Job is not finished yet"));
-		}
+		
 	}
 
 }

@@ -98,7 +98,7 @@ public class DoSearchHandler implements RestHandler {
 			response.setContentType("text/xml");
 			response.addIntHeader(JOBID, jobId);
 			Writer writer= response.getWriter();
-			writer.write(jobId);
+			writer.write(jobId.toString());
 			//TODO return number of units created to 
 		} catch (AmazonServiceException ase) {
 			logger.error(ase);
