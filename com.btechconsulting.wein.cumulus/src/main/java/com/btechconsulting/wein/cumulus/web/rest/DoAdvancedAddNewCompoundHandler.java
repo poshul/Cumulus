@@ -67,7 +67,7 @@ public class DoAdvancedAddNewCompoundHandler implements RestHandler {
 			throw new ServletException("Please make sure that the compound parameters are well formed");
 		}
 		
-		//Double check that the compoundParams object has OwnerId and CompoundId
+		//Double check that the compoundParams object has OwnerId and CompoundId and compound
 		String ownerId= compoundParams.getOwnerID();
 		if (ownerId==null){
 			logger.debug("User didn't supply an ownerId");
@@ -78,6 +78,12 @@ public class DoAdvancedAddNewCompoundHandler implements RestHandler {
 		if (compoundId==null){
 			logger.debug("User didn't supply an compoundId");
 			throw new ServletException("You must supply an compoundId");
+		}
+		
+		String compoundz= compoundParams.getCompound();
+		if (compoundz==null){
+			logger.debug("User didn't supply an compound");
+			throw new ServletException("You must supply an compound");
 		}
 
 		//TODO check validity of pdbqt file here.
