@@ -11,6 +11,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.amazonaws.services.sqs.AmazonSQSClient;
@@ -19,12 +20,20 @@ import com.btechconsulting.wein.cumulus.model.ReturnUnit;
 
 public class SqsListenerTest {
 
-	/*	@Before
+/*		@Before
 	public void setUp() throws Exception {
+
 	}*/
 
-	@Test
+	//@Test
 	public void threadTest() {
+		//sleep until we can recreate the queue
+		try {
+			Thread.sleep(60000);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		String testUID= "tester";
 		Integer testjobID= 9;
 		Integer testWorkunitID=1;
@@ -38,7 +47,6 @@ public class SqsListenerTest {
 		}
 		AmazonSQSClient sqsClient=new AmazonSQSClient(Initializer.getInstance().getCredentials());
 		Map<Integer, Initializer.wUStatus> work= new HashMap<Integer, Initializer.wUStatus>();
-		
 		ReturnUnit testUnit= new ReturnUnit();
 		testUnit.setJobID(testjobID);
 		testUnit.setOwnerID(testUID);
@@ -68,7 +76,7 @@ public class SqsListenerTest {
 	}
 	//delete the unit from the queue
 
-	@After
+	//@After
 	public void tearDown() throws Exception{
 		Initializer.getInstance().teardownAll();
 	}

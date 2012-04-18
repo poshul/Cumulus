@@ -10,6 +10,7 @@ package com.btechconsulting.wein.cumulus.model;
 
 import javax.xml.bind.annotation.XmlRegistry;
 
+import com.btechconsulting.wein.cumulus.model.NewCompound;
 
 /**
  * This object contains factory methods for each 
@@ -58,6 +59,30 @@ public class ObjectFactory {
      */
     public ReturnUnit createReturnUnit() {
         return new ReturnUnit();
+    }
+
+    /**
+     * Create an instance of {@link NewCompound }
+     * 
+     */
+    public NewCompound createNewCompound() {
+        return new NewCompound();
+    }
+
+    /**
+     * Create an instance of {@link Results }
+     * 
+     */
+    public Results createResults() {
+        return new Results();
+    }
+
+    /**
+     * Create an instance of {@link FilterParams }
+     * 
+     */
+    public FilterParams createFilterParams() {
+        return new FilterParams();
     }
 
 }

@@ -116,6 +116,6 @@ public class DoSearchHandler implements RestHandler {
 
 		
 		
-	}  
+	}
 
 }
