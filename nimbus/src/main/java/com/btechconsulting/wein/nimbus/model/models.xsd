@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.example.org/WorkUnit" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" xmlns:Q1="http://www.example.org/WorkUnit">
-<xs:complexType name="WorkUnit">
-<xs:sequence>
-    <xs:element name="pointerToMolecule" type="string"></xs:element>
+<xs:schema xmlns="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://cumuluschemistry.com/WorkUnit" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	elementFormDefault="qualified" xmlns:Q1="http://cumuluschemistry.com/WorkUnit">
+	<xs:complexType name="WorkUnit">
+		<xs:sequence>
+			<xs:element name="pointerToMolecule" type="string"></xs:element>
 
     <xs:element name="pointerToReceptor" type="string"></xs:element>
 

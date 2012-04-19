@@ -5,5 +5,5 @@
 // Generated on: 2011.11.30 at 03:58:49 PM EST 
 //
 
-@javax.xml.bind.annotation.XmlSchema(namespace = "http://www.example.org/WorkUnit", elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
+@javax.xml.bind.annotation.XmlSchema(namespace = "http://cumuluschemistry.com/WorkUnit", elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
 package com.btechconsulting.wein.nimbus.model;
