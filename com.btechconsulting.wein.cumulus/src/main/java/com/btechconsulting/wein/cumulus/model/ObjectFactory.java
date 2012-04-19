@@ -70,6 +70,14 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link ShortResponse }
+     * 
+     */
+    public ShortResponse createShortResponse() {
+        return new ShortResponse();
+    }
+
+    /**
      * Create an instance of {@link Results }
      * 
      */

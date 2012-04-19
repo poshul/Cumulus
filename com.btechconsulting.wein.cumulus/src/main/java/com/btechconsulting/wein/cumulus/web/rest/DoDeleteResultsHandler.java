@@ -11,11 +11,15 @@ import java.sql.Statement;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 
 import org.apache.log4j.Logger;
 
 import com.btechconsulting.wein.cumulus.initialization.Initializer;
 import com.btechconsulting.wein.cumulus.initialization.PooledConnectionFactory;
+import com.btechconsulting.wein.cumulus.model.ShortResponse;
 
 /**
  * @author samuel
@@ -27,7 +31,7 @@ public class DoDeleteResultsHandler implements RestHandler {
 	public static final String OWNERID="ownerId";
 	public static final String JOBID="jobId";
 	private final Logger logger= Logger.getLogger(DoDeleteResultsHandler.class);
-	
+
 	/* (non-Javadoc)
 	 * @see com.btechconsulting.wein.cumulus.web.rest.RestHandler#executeSearch(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
@@ -58,21 +62,32 @@ public class DoDeleteResultsHandler implements RestHandler {
 			//TODO deal with invalid owner and job ID's 
 		}
 		if(isDone){
-		//delete results from sql
-		String query="DELETE FROM cumulus.results WHERE owner_id='"+ownerId+"' and job_id='"+jobId+"';";
-		try {
-			Statement stmt= PooledConnectionFactory.INSTANCE.getCumulusConnection().createStatement();
-			stmt.executeUpdate(query);
-			Writer writer = response.getWriter();
-			response.setContentType("text/xml");
-			response.setStatus(200);
-			writer.write("Job "+jobId+" deleted.");
-		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new ServletException("Couldn't connect to SQL:"+e);
-		}
-		//delete job from local store
-		Initializer.getInstance().removeJobFromServer(ownerId, jobId);
+			//delete results from sql
+			String query="DELETE FROM cumulus.results WHERE owner_id='"+ownerId+"' and job_id='"+jobId+"';";
+			try {
+				Statement stmt= PooledConnectionFactory.INSTANCE.getCumulusConnection().createStatement();
+				stmt.executeUpdate(query);
+				Writer writer = response.getWriter();
+				response.setContentType("text/xml");
+				response.setStatus(200);
+				//Build the response xml
+				JAXBContext context = JAXBContext.newInstance(ShortResponse.class);
+				Marshaller m = context.createMarshaller();
+				ShortResponse responseXml= new ShortResponse();
+				responseXml.setIsError(false);
+				responseXml.setResponse("Job "+jobId+" deleted.");
+				m.marshal(responseXml, writer);
+
+			} catch (JAXBException e3) {
+				// TODO Auto-generated catch block
+				e3.printStackTrace();
+				throw new ServletException("Couldn't marshall result");
+			} catch (SQLException e) {
+				e.printStackTrace();
+				throw new ServletException("Couldn't connect to SQL:"+e);
+			}
+			//delete job from local store
+			Initializer.getInstance().removeJobFromServer(ownerId, jobId);
 		}else{
 			throw (new ServletException("Job is not finished yet"));
 		}

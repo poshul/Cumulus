@@ -13,11 +13,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.Logger;
 
 import com.btechconsulting.wein.cumulus.initialization.PooledConnectionFactory;
+import com.btechconsulting.wein.cumulus.model.ShortResponse;
+import com.sun.xml.internal.bind.CycleRecoverable.Context;
 
 /*
  * @author Samuel Wein
@@ -34,10 +37,13 @@ public class DoAddNewCompoundHandler implements RestHandler {
 
 	public void executeSearch(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
-
+		
+		Writer writer=response.getWriter();
+		
 		String[] ownerIds= request.getParameterValues(OWNERID);
 		if (ownerIds==null|| ownerIds.length!=1){
 			logger.debug("User didn't supply an ownerId");
+			//response.setStatus(400);
 			throw new ServletException("You must supply an ownerId");
 		}
 		String ownerId=ownerIds[0];
@@ -113,10 +119,22 @@ public class DoAddNewCompoundHandler implements RestHandler {
 			e2.printStackTrace(System.err);
 			throw new ServletException("Couldn't connect to database.  Please try again later.");
 		}
-		response.setContentType("text/html");
+		response.setContentType("text/xml");
 		response.setStatus(200);
-		Writer writer=response.getWriter();
-		writer.write("Successfully added "+compoundId+" to database.");
+		//Build the response xml
+		try {
+			JAXBContext context = JAXBContext.newInstance(ShortResponse.class);
+			Marshaller m = context.createMarshaller();
+			ShortResponse responseXml= new ShortResponse();
+			responseXml.setIsError(false);
+			responseXml.setResponse("Successfully added "+compoundId+" to database.");
+			m.marshal(responseXml, writer);
+
+		} catch (JAXBException e3) {
+			// TODO Auto-generated catch block
+			e3.printStackTrace();
+			throw new ServletException("Couldn't marshall result");
+		}
 	}
 
 }

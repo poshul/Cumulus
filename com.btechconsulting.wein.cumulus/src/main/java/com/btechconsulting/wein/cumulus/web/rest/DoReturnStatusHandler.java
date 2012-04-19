@@ -27,6 +27,7 @@ import org.apache.tomcat.dbcp.dbcp.PoolableConnectionFactory;
 import com.btechconsulting.wein.cumulus.initialization.Initializer;
 import com.btechconsulting.wein.cumulus.initialization.PooledConnectionFactory;
 import com.btechconsulting.wein.cumulus.model.Results;
+import com.btechconsulting.wein.cumulus.model.ShortResponse;
 import com.btechconsulting.wein.cumulus.web.rest.RestHandler;
 
 /**
@@ -65,17 +66,32 @@ public class DoReturnStatusHandler implements RestHandler {
 		try{
 			Integer numLeft=Initializer.getInstance().getNumberOfWorkUnitsInFlight(ownerId, jobId); 
 			//set up the response
-			response.setContentType("text/html");
+			response.setContentType("text/xml");
 			response.setStatus(200);
 			response.addIntHeader(JOBID, jobId);
 			//get the output stream
-			Writer out = response.getWriter();
+			Writer writer = response.getWriter();
 			//only proceed if we are done
+			String toWrite;
 			if (numLeft==0){
-				out.write("done");
+				toWrite="done";
 			}else{
-				out.write(numLeft.toString());
+				toWrite=numLeft.toString();
 			}
+			try {
+				JAXBContext context = JAXBContext.newInstance(ShortResponse.class);
+				Marshaller m = context.createMarshaller();
+				ShortResponse responseXml= new ShortResponse();
+				responseXml.setIsError(false);
+				responseXml.setResponse(toWrite);
+				m.marshal(responseXml, writer);
+
+			} catch (JAXBException e3) {
+				// TODO Auto-generated catch block
+				e3.printStackTrace();
+				throw new ServletException("Couldn't marshall result");
+			}
+			
 		}
 		catch(IllegalStateException ise){
 			throw (new ServletException(ise.getMessage()));

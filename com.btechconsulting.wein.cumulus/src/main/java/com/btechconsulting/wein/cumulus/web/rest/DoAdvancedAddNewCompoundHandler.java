@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.Logger;
@@ -21,6 +22,7 @@ import org.apache.log4j.Logger;
 import com.btechconsulting.wein.cumulus.BuildAddNewCompoundQuery;
 import com.btechconsulting.wein.cumulus.initialization.PooledConnectionFactory;
 import com.btechconsulting.wein.cumulus.model.NewCompound;
+import com.btechconsulting.wein.cumulus.model.ShortResponse;
 import com.btechconsulting.wein.cumulus.model.VinaParams;
 
 /*
@@ -46,7 +48,7 @@ public class DoAdvancedAddNewCompoundHandler implements RestHandler {
 			logger.debug("User supplied more than one value for overwrites");
 		}
 		Boolean overwrite=Boolean.valueOf(overwrites[0]);
-		
+
 		//Make sure the user supplied a compound
 		String[] compounds= request.getParameterValues(COMPOUND);
 		if (compounds==null|| compounds.length!=1){
@@ -54,7 +56,7 @@ public class DoAdvancedAddNewCompoundHandler implements RestHandler {
 			throw new ServletException("You must supply an compound");
 		}
 		String compound=compounds[0];
-		
+
 		//Make sure that the compound's XML is well formed
 		NewCompound compoundParams= new NewCompound();
 		try{
@@ -66,7 +68,7 @@ public class DoAdvancedAddNewCompoundHandler implements RestHandler {
 			logger.warn("user supplied badly formed compound parameters");
 			throw new ServletException("Please make sure that the compound parameters are well formed");
 		}
-		
+
 		//Double check that the compoundParams object has OwnerId and CompoundId and compound
 		String ownerId= compoundParams.getOwnerID();
 		if (ownerId==null){
@@ -79,7 +81,7 @@ public class DoAdvancedAddNewCompoundHandler implements RestHandler {
 			logger.debug("User didn't supply an compoundId");
 			throw new ServletException("You must supply an compoundId");
 		}
-		
+
 		String compoundz= compoundParams.getCompound();
 		if (compoundz==null){
 			logger.debug("User didn't supply an compound");
@@ -87,11 +89,11 @@ public class DoAdvancedAddNewCompoundHandler implements RestHandler {
 		}
 
 		//TODO check validity of pdbqt file here.
-		
+
 		//modify query based on optional parameters.
 		String molQuery=BuildAddNewCompoundQuery.BuildQuery(compoundParams);
 
-		
+
 		String provQuery="INSERT INTO cumulus.supplier_properties (owner_id, compound_id) VALUES (\""+ownerId+"\",\""+compoundId+"\");";
 		Statement stmt= null;
 		Connection con;
@@ -113,7 +115,7 @@ public class DoAdvancedAddNewCompoundHandler implements RestHandler {
 						throw new ServletException("A compound with this name and user already exists in the database, please repeat the query with \"overwrite=true\" to overwrite");
 					}
 				}				
-				
+
 				stmt.executeUpdate(molQuery);
 				stmt.executeUpdate(provQuery);
 				con.commit();
@@ -137,10 +139,24 @@ public class DoAdvancedAddNewCompoundHandler implements RestHandler {
 			e2.printStackTrace(System.err);
 			throw new ServletException("Couldn't connect to database.  Please try again later.");
 		}
-		response.setContentType("text/html");
+		response.setContentType("text/xml");
 		response.setStatus(200);
 		Writer writer=response.getWriter();
-		writer.write("Successfully added "+compoundId+" to database.");
+		//writer.write("Successfully added "+compoundId+" to database.");
+		//Build the response xml
+		try {
+			JAXBContext context = JAXBContext.newInstance(ShortResponse.class);
+			Marshaller m = context.createMarshaller();
+			ShortResponse responseXml= new ShortResponse();
+			responseXml.setIsError(false);
+			responseXml.setResponse("Successfully added "+compoundId+" to database.");
+			m.marshal(responseXml, writer);
+
+		} catch (JAXBException e3) {
+			// TODO Auto-generated catch block
+			e3.printStackTrace();
+			throw new ServletException("Couldn't marshall result");
+		}
 	}
 
 }

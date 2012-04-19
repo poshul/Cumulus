@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.Logger;
@@ -20,6 +21,7 @@ import org.apache.log4j.Logger;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.btechconsulting.wein.cumulus.model.FilterParams;
+import com.btechconsulting.wein.cumulus.model.ShortResponse;
 import com.btechconsulting.wein.cumulus.model.VinaParams;
 import com.btechconsulting.wein.cumulus.workUnitGenerator.WorkUnitGenerator;
 
@@ -44,29 +46,29 @@ public class DoSearchHandler implements RestHandler {
 			throw new ServletException("You must supply an ownerId");
 		}
 		String ownerId=ownerIds[0];
-		
+
 		String[] vinaParamss= request.getParameterValues(VINAPARAMS);
 		if (vinaParamss==null||vinaParamss.length!=1){
 			logger.debug("User didn't supply any vinaParams");
 			throw new ServletException("You must supply one set of vinaparams");
 		}
 		String vinaParams=vinaParamss[0];
-		
+
 		String[] receptors= request.getParameterValues(RECEPTOR);
 		if (receptors==null||receptors.length!=1){
 			logger.debug("User didn't supply a receptor");
 			throw new ServletException("You must supply one receptor");
 		}
 		String receptor= receptors[0];
-		
+
 		String[] filterParamss= request.getParameterValues(FILTERPARAMS);
 		if (filterParamss==null||filterParamss.length!=1){
 			logger.debug("User didn't supply any filterParams");
 			throw new ServletException("You must supply one set of filterParams");
 		}
 		String filterParams= filterParamss[0];
-				
-		
+
+
 		//test that VinaParams is well formed
 		VinaParams vinaParamsObj = new VinaParams();
 		try{
@@ -79,7 +81,7 @@ public class DoSearchHandler implements RestHandler {
 			logger.warn("user supplied badly formed vinaParams");
 			throw new ServletException("Please make sure the vinaParams is well formatted");
 		}
-		
+
 		//test that FilterParams is well formed
 		FilterParams filterParamsObj= new FilterParams();
 		try{
@@ -92,15 +94,24 @@ public class DoSearchHandler implements RestHandler {
 			logger.warn("user supplied badly formed filterParams");
 			throw new ServletException("Please make sure the filterParams is well formatted");
 		}
-		
+
 		try {
 			Integer jobId= WorkUnitGenerator.BuildJob(receptor, ownerId, vinaParamsObj, filterParamsObj);
 			response.setContentType("text/xml");
+			response.setStatus(200);
 			response.addIntHeader(JOBID, jobId);
+
 			Writer writer= response.getWriter();
-			writer.write(jobId.toString());
-			//TODO return number of units created to 
-		} catch (AmazonServiceException ase) {
+
+			JAXBContext context = JAXBContext.newInstance(ShortResponse.class);
+			Marshaller m = context.createMarshaller();
+			ShortResponse responseXml= new ShortResponse();
+			responseXml.setIsError(false);
+			responseXml.setResponse(jobId.toString());
+			m.marshal(responseXml, writer);
+		}
+		//TODO return number of units created to 
+		catch (AmazonServiceException ase) {
 			logger.error(ase);
 			throw new ServletException("Error in AWS please try again later.");
 		} catch (AmazonClientException ace) {
@@ -114,8 +125,8 @@ public class DoSearchHandler implements RestHandler {
 			throw new ServletException("Internal JAXB error");
 		}
 
-		
-		
+
+
 	}
 
 }

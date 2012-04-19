@@ -145,4 +145,11 @@
 				minOccurs="0"></xs:element>
 		</xs:sequence>
 	</xs:complexType>
+
+	<xs:complexType name="ShortResponse">
+		<xs:sequence>
+			<xs:element name="response" type="string"></xs:element>
+			<xs:element name="isError" type="boolean"></xs:element>
+		</xs:sequence>
+	</xs:complexType>
 </xs:schema>
