@@ -1,7 +1,6 @@
 package com.btechconsulting.wein.cumulus.web.rest;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.io.Writer;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -11,16 +10,11 @@ import java.sql.Statement;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.Logger;
 
+import com.btechconsulting.wein.cumulus.CreateShortReturn;
 import com.btechconsulting.wein.cumulus.initialization.PooledConnectionFactory;
-import com.btechconsulting.wein.cumulus.model.ShortResponse;
-import com.sun.xml.internal.bind.CycleRecoverable.Context;
 
 /*
  * @author Samuel Wein
@@ -39,26 +33,36 @@ public class DoAddNewCompoundHandler implements RestHandler {
 			HttpServletResponse response) throws ServletException, IOException {
 		
 		Writer writer=response.getWriter();
-		
+		response.setContentType("text/xml");
+
 		String[] ownerIds= request.getParameterValues(OWNERID);
 		if (ownerIds==null|| ownerIds.length!=1){
 			logger.debug("User didn't supply an ownerId");
-			//response.setStatus(400);
-			throw new ServletException("You must supply an ownerId");
+			String error= "You must supply an ownerId";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			//throw new ServletException();
+			return;
 		}
 		String ownerId=ownerIds[0];
 
 		String[] compoundIds= request.getParameterValues(COMPOUNDID);
 		if (compoundIds==null|| compoundIds.length!=1){
 			logger.debug("User didn't supply an compoundId");
-			throw new ServletException("You must supply an compoundId");
+			String error="You must supply an compoundId";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 		String compoundId=compoundIds[0];
 
 		String[] compounds= request.getParameterValues(COMPOUND);
 		if (compounds==null|| compounds.length!=1){
 			logger.debug("User didn't supply an compound");
-			throw new ServletException("You must supply an compound");
+			String error="You must supply an compound";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 		String compound=compounds[0];
 
@@ -92,7 +96,11 @@ public class DoAddNewCompoundHandler implements RestHandler {
 						stmt.executeUpdate("DELETE FROM cumulus.supplier_properties where compound_id=\""+compoundId+"\" and owner_id=\""+ownerId+"\";");
 						con.commit();
 					}else{
-						throw new ServletException("A compound with this name and user already exists in the database, please repeat the query with \"overwrite=true\" to overwrite");
+						String error="A compound with this name and user already exists in the database, please repeat the query with \"overwrite=true\" to overwrite";
+						response.setStatus(400);
+						writer.write(CreateShortReturn.createShortResponse(error, true));
+						
+						return;
 					}
 				}				
 				
@@ -109,32 +117,28 @@ public class DoAddNewCompoundHandler implements RestHandler {
 				} catch (SQLException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace(System.err);
-					throw new ServletException("Couldn't add compound to database.  Please contact an administrator before trying again.");
+					String error="Couldn't add compound to database.  Please contact an administrator before trying again.";
+					response.setStatus(500);
+					writer.write(CreateShortReturn.createShortResponse(error, true));
+					return;
 				}
-				throw new ServletException("Couldn't connect to database.  Please try again later.");
+				String error="Couldn't connect to database.  Please try again later.";
+				response.setStatus(500);
+				writer.write(CreateShortReturn.createShortResponse(error, true));
+				return;
 
 			}
 		} catch (SQLException e2) {
 			System.err.println("Couldn't get SQL connection");
 			e2.printStackTrace(System.err);
-			throw new ServletException("Couldn't connect to database.  Please try again later.");
+			String error="Couldn't connect to database.  Please try again later.";
+			response.setStatus(500);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
-		response.setContentType("text/xml");
 		response.setStatus(200);
 		//Build the response xml
-		try {
-			JAXBContext context = JAXBContext.newInstance(ShortResponse.class);
-			Marshaller m = context.createMarshaller();
-			ShortResponse responseXml= new ShortResponse();
-			responseXml.setIsError(false);
-			responseXml.setResponse("Successfully added "+compoundId+" to database.");
-			m.marshal(responseXml, writer);
-
-		} catch (JAXBException e3) {
-			// TODO Auto-generated catch block
-			e3.printStackTrace();
-			throw new ServletException("Couldn't marshall result");
-		}
+		writer.write(CreateShortReturn.createShortResponse("Successfully added "+compoundId+" to database.", false));
 	}
 
 }

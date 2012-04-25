@@ -4,6 +4,7 @@ package com.btechconsulting.wein.cumulus.initialization;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -304,9 +305,11 @@ public class Initializer {
 		String query="DELETE FROM cumulus.results;";
 		Statement stmt = null;
 		try {
-			stmt= PooledConnectionFactory.INSTANCE.getCumulusConnection().createStatement();
+			Connection conn= PooledConnectionFactory.INSTANCE.getCumulusConnection();
+			stmt= conn.createStatement();
 			stmt.executeUpdate(query);
 			System.out.println("Deleted un-returned results");
+			conn.close();
 		} catch (SQLException e) {
 			System.out.println("Couldn't delete un-returned results");
 			e.printStackTrace();

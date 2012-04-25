@@ -5,6 +5,7 @@ package com.btechconsulting.wein.cumulus.web.rest;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -17,6 +18,7 @@ import javax.xml.bind.Marshaller;
 
 import org.apache.log4j.Logger;
 
+import com.btechconsulting.wein.cumulus.CreateShortReturn;
 import com.btechconsulting.wein.cumulus.initialization.Initializer;
 import com.btechconsulting.wein.cumulus.initialization.PooledConnectionFactory;
 import com.btechconsulting.wein.cumulus.model.ShortResponse;
@@ -37,18 +39,29 @@ public class DoDeleteResultsHandler implements RestHandler {
 	 */
 	public void executeSearch(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
+		
+		//Set up writer and response type
+		Writer writer=response.getWriter();
+		response.setContentType("text/xml");
+		
 		//Parse out arguments
 		String[] ownerIds= request.getParameterValues(OWNERID);
 		if (ownerIds==null|| ownerIds.length!=1){
 			logger.debug("User didn't supply an ownerID");
-			throw new ServletException("You must supply an ownerID");
+			String error="You must supply an ownerID";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 		String ownerId=ownerIds[0];
 
 		String[] jobIds= request.getParameterValues(JOBID);
 		if (jobIds==null|| jobIds.length!=1){
 			logger.debug("User didn't supply an jobID");
-			throw new ServletException("You must supply a jobID");
+			String error="You must supply a jobID";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 		Integer jobId=Integer.valueOf(jobIds[0]);//TODO handle parse exception here
 		Boolean isDone=false;
@@ -58,17 +71,20 @@ public class DoDeleteResultsHandler implements RestHandler {
 			}
 		}
 		catch(IllegalStateException ise){
-			throw (new ServletException(ise.getMessage()));
+			String error=ise.getMessage();
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
+			
 			//TODO deal with invalid owner and job ID's 
 		}
 		if(isDone){
 			//delete results from sql
 			String query="DELETE FROM cumulus.results WHERE owner_id='"+ownerId+"' and job_id='"+jobId+"';";
 			try {
-				Statement stmt= PooledConnectionFactory.INSTANCE.getCumulusConnection().createStatement();
+				Connection conn = PooledConnectionFactory.INSTANCE.getCumulusConnection();
+				Statement stmt= conn.createStatement();
 				stmt.executeUpdate(query);
-				Writer writer = response.getWriter();
-				response.setContentType("text/xml");
 				response.setStatus(200);
 				//Build the response xml
 				JAXBContext context = JAXBContext.newInstance(ShortResponse.class);
@@ -77,19 +93,28 @@ public class DoDeleteResultsHandler implements RestHandler {
 				responseXml.setIsError(false);
 				responseXml.setResponse("Job "+jobId+" deleted.");
 				m.marshal(responseXml, writer);
-
+				conn.close();
 			} catch (JAXBException e3) {
 				// TODO Auto-generated catch block
 				e3.printStackTrace();
-				throw new ServletException("Couldn't marshall result");
+				String error="Couldn't marshall result";
+				response.setStatus(500);
+				writer.write(CreateShortReturn.createShortResponse(error, true));
+				return;
 			} catch (SQLException e) {
 				e.printStackTrace();
-				throw new ServletException("Couldn't connect to SQL:"+e);
+				String error="Couldn't connect to SQL:"+e;
+				response.setStatus(500);
+				writer.write(CreateShortReturn.createShortResponse(error, true));
+				return;
 			}
 			//delete job from local store
 			Initializer.getInstance().removeJobFromServer(ownerId, jobId);
 		}else{
-			throw (new ServletException("Job is not finished yet"));
+			String error="Job is not finished yet";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 	}
 

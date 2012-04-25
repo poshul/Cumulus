@@ -3,11 +3,9 @@
  */
 package com.btechconsulting.wein.cumulus.web.rest;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.lang.reflect.Array;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -22,12 +20,10 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import org.apache.log4j.Logger;
-import org.apache.tomcat.dbcp.dbcp.PoolableConnectionFactory;
 
-import com.btechconsulting.wein.cumulus.initialization.Initializer;
+import com.btechconsulting.wein.cumulus.CreateShortReturn;
 import com.btechconsulting.wein.cumulus.initialization.PooledConnectionFactory;
 import com.btechconsulting.wein.cumulus.model.Results;
-import com.btechconsulting.wein.cumulus.web.rest.RestHandler;
 
 /**
  * @author samuel
@@ -47,54 +43,53 @@ public class DoForceReturnResultsHandler implements RestHandler {
 	 */
 	public void executeSearch(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
+		
+		response.setContentType("text/xml");
+		Writer writer = response.getWriter();
+
 		//Parse out arguments
 		String[] ownerIds= request.getParameterValues(OWNERID);
 		if (ownerIds==null|| ownerIds.length!=1){
 			logger.debug("User didn't supply an ownerID");
-			throw new ServletException("You must supply an ownerID");
+			String error="You must supply an ownerID";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 		String ownerId=ownerIds[0];
 
 		String[] jobIds= request.getParameterValues(JOBID);
 		if (jobIds==null|| jobIds.length!=1){
 			logger.debug("User didn't supply an jobID");
-			throw new ServletException("You must supply a jobID");
+			String error="You must supply a jobID";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 		Integer jobId=Integer.valueOf(jobIds[0]);//TODO handle parse exception here
-		/*Boolean isDone=false;
-		try{
-			if(Initializer.getInstance().getNumberOfWorkUnitsInFlight(ownerId, jobId)==0){
-				isDone=true;
-			}
-		}
-		catch(IllegalStateException ise){
-			throw (new ServletException(ise.getMessage()));
-			//TODO deal with invalid owner and job ID's 
-		}*/
-		//only proceed if we are done
-/*		if (isDone){
-*/			//TODO parse all results, return a list of ERROR, and DONE
 
 			//get all of the results from the database
 			String query="SELECT results FROM cumulus.results WHERE owner_id='"+ownerId+"' AND job_id='"+jobId+"';";
 			List<String> resultpdbqts =new ArrayList<String>();
 			Statement stmt= null;
 			try {
-				stmt= PooledConnectionFactory.INSTANCE.getCumulusConnection().createStatement();
+				Connection conn=PooledConnectionFactory.INSTANCE.getCumulusConnection();
+				stmt= conn.createStatement();
 				ResultSet results= stmt.executeQuery(query);
 				while (results.next()){ //go through all of the results that we have
 					resultpdbqts.add(results.getString(1));
 				}
+				conn.close();
 			} catch (SQLException e) {
-				// TODO deal with ramifications of a sql exception
 				e.printStackTrace();
+				String error="Couldn't connect to SQL";
+				response.setStatus(400);
+				writer.write(CreateShortReturn.createShortResponse(error, true));
+				return;
 			}
 			//set up the response
-			response.setContentType("text/xml");
 			response.setStatus(200);
 			response.addIntHeader(JOBID, jobId);
-			//get the output stream
-			Writer out = response.getWriter();
 			//create a results object for the results.
 			Results results= new Results();
 			//put each result in the results object
@@ -104,26 +99,14 @@ public class DoForceReturnResultsHandler implements RestHandler {
 			try {
 				JAXBContext context = JAXBContext.newInstance(Results.class);
 				Marshaller m = context.createMarshaller();
-				m.marshal(results, out);
+				m.marshal(results, writer);
 			} catch (JAXBException e1) {
 				e1.printStackTrace();
-				throw new ServletException(e1);
+				String error="Couldn't Marshall results";
+				response.setStatus(500);
+				writer.write(CreateShortReturn.createShortResponse(error, true));
+				return;
 			}
-			
-			/*//delete results from sql
-			query="DELETE FROM cumulus.results WHERE owner_id='"+ownerId+"' and job_id='"+jobId+"';";
-			try {
-				stmt.executeUpdate(query);
-			} catch (SQLException e) {
-				// TODO deal with ramifications of sql exception
-				e.printStackTrace();
-			}
-			//delete job from local store
-			Initializer.getInstance().removeJobFromServer(ownerId, jobId);*/
-
-/*		}else{
-			throw (new ServletException("Job is not finished yet"));
-		}*/
 	}
 
 }

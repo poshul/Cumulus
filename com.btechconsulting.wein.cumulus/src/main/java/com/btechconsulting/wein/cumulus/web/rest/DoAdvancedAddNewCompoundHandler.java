@@ -1,7 +1,6 @@
 package com.btechconsulting.wein.cumulus.web.rest;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
 import java.sql.Connection;
@@ -14,16 +13,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.Logger;
 
 import com.btechconsulting.wein.cumulus.BuildAddNewCompoundQuery;
+import com.btechconsulting.wein.cumulus.CreateShortReturn;
 import com.btechconsulting.wein.cumulus.initialization.PooledConnectionFactory;
 import com.btechconsulting.wein.cumulus.model.NewCompound;
-import com.btechconsulting.wein.cumulus.model.ShortResponse;
-import com.btechconsulting.wein.cumulus.model.VinaParams;
 
 /*
  * @author Samuel Wein
@@ -38,7 +35,10 @@ public class DoAdvancedAddNewCompoundHandler implements RestHandler {
 
 	public void executeSearch(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
-
+		//Set up writer and response type
+		Writer writer=response.getWriter();
+		response.setContentType("text/xml");
+		
 		String[] overwrites= request.getParameterValues(OVERWRITE);
 		if (overwrites==null){  //if the user doesn't specify whether to overwrite existing value or not we default to not
 			overwrites=new String[1];
@@ -53,7 +53,10 @@ public class DoAdvancedAddNewCompoundHandler implements RestHandler {
 		String[] compounds= request.getParameterValues(COMPOUND);
 		if (compounds==null|| compounds.length!=1){
 			logger.debug("User didn't supply an compound");
-			throw new ServletException("You must supply an compound");
+			String error="You must supply an compound";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 		String compound=compounds[0];
 
@@ -66,26 +69,38 @@ public class DoAdvancedAddNewCompoundHandler implements RestHandler {
 		}
 		catch (JAXBException jbe){
 			logger.warn("user supplied badly formed compound parameters");
-			throw new ServletException("Please make sure that the compound parameters are well formed");
+			String error="Please make sure that the compound parameters are well formed";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 
 		//Double check that the compoundParams object has OwnerId and CompoundId and compound
 		String ownerId= compoundParams.getOwnerID();
 		if (ownerId==null){
 			logger.debug("User didn't supply an ownerId");
-			throw new ServletException("You must supply an ownerId");
+			String error="You must supply an ownerId";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 
 		String compoundId= compoundParams.getCompoundID();
 		if (compoundId==null){
 			logger.debug("User didn't supply an compoundId");
-			throw new ServletException("You must supply an compoundId");
+			String error="You must supply an compoundId";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 
 		String compoundz= compoundParams.getCompound();
 		if (compoundz==null){
 			logger.debug("User didn't supply an compound");
-			throw new ServletException("You must supply an compound");
+			String error="You must supply an compound";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 
 		//TODO check validity of pdbqt file here.
@@ -112,7 +127,10 @@ public class DoAdvancedAddNewCompoundHandler implements RestHandler {
 						stmt.executeUpdate("DELETE FROM cumulus.supplier_properties where compound_id=\""+compoundId+"\" and owner_id=\""+ownerId+"\";");
 						con.commit();
 					}else{
-						throw new ServletException("A compound with this name and user already exists in the database, please repeat the query with \"overwrite=true\" to overwrite");
+						String error="A compound with this name and user already exists in the database, please repeat the query with \"overwrite=true\" to overwrite";
+						response.setStatus(400);
+						writer.write(CreateShortReturn.createShortResponse(error, true));
+						return;
 					}
 				}				
 
@@ -126,37 +144,32 @@ public class DoAdvancedAddNewCompoundHandler implements RestHandler {
 				try {
 					con.rollback(); //this stupidly complex series of try catch blocks prevents leaving the database in an inconsistant state
 					con.setAutoCommit(true);
+					con.close();
 				} catch (SQLException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace(System.err);
-					throw new ServletException("Couldn't add compound to database.  Please contact an administrator before trying again.");
+					String error="Couldn't add compound to database.  Please contact an administrator before trying again.";
+					response.setStatus(500);
+					writer.write(CreateShortReturn.createShortResponse(error, true));
+					return;
 				}
-				throw new ServletException("Couldn't connect to database.  Please try again later.");
+				String error="Couldn't connect to database.  Please try again later.";
+				response.setStatus(500);
+				writer.write(CreateShortReturn.createShortResponse(error, true));
+				return;
 
 			}
 		} catch (SQLException e2) {
 			System.err.println("Couldn't get SQL connection");
 			e2.printStackTrace(System.err);
-			throw new ServletException("Couldn't connect to database.  Please try again later.");
+			String error="Couldn't connect to database.  Please try again later.";
+			response.setStatus(500);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
-		response.setContentType("text/xml");
 		response.setStatus(200);
-		Writer writer=response.getWriter();
-		//writer.write("Successfully added "+compoundId+" to database.");
-		//Build the response xml
-		try {
-			JAXBContext context = JAXBContext.newInstance(ShortResponse.class);
-			Marshaller m = context.createMarshaller();
-			ShortResponse responseXml= new ShortResponse();
-			responseXml.setIsError(false);
-			responseXml.setResponse("Successfully added "+compoundId+" to database.");
-			m.marshal(responseXml, writer);
-
-		} catch (JAXBException e3) {
-			// TODO Auto-generated catch block
-			e3.printStackTrace();
-			throw new ServletException("Couldn't marshall result");
-		}
+		writer.write(CreateShortReturn.createShortResponse("Successfully added "+compoundId+" to database.", false));
+		
 	}
 
 }

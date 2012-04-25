@@ -7,7 +7,7 @@ public class Constants {
 	public static final String dispatchQueueName="dispatchQueue";
 	public static final String returnQueueName="returnQueue";
 	public static final String ec2Region="ec2.us-east-1.amazonaws.com";
-	public static final String instanceType="t1.micro";//"c1.xlarge"; TODO switch back
+	public static final String instanceType="c1.xlarge";//"c1.xlarge"; TODO switch back
 	public static final String imageID="ami-14c11a7d";
 	public static final String securityGroupID="ssh";
 	public static final String keyName="Samkeys";

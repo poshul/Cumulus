@@ -151,6 +151,7 @@ public class DetermineWorkToDo {
 		while(results.next()){
 			resultstring.add(results.getString(1));
 		}
+		conn.close();
 		return resultstring;
 	}
 

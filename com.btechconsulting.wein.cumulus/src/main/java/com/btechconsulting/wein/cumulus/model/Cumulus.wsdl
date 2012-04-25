@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<wsdl:definitions xmlns:http="http://schemas.xmlsoap.org/wsdl/http/"
+	xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://cumuluschemistry.com/WorkUnit"
+	xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	name="Cumulus" targetNamespace="http://cumuluschemistry.com/WorkUnit">
+	<wsdl:types>
+		<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+			targetNamespace="http://cumuluschemistry.com/WorkUnit">
+			<xsd:complexType name="ShortResponse">
+				<xsd:sequence>
+					<xsd:element name="response" type="xsd:string"></xsd:element>
+					<xsd:element name="isError" type="xsd:boolean"></xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:complexType name="NewCompound">
+				<xsd:sequence>
+					<xsd:element name="ownerID" type="xsd:string" maxOccurs="1"
+						minOccurs="1">
+					</xsd:element>
+					<xsd:element name="Compound_ID" type="xsd:string"
+						maxOccurs="1" minOccurs="1"></xsd:element>
+					<xsd:element name="Compound" type="xsd:string" maxOccurs="1"
+						minOccurs="1">
+					</xsd:element>
+					<xsd:element name="mwt" type="xsd:float" maxOccurs="1"
+						minOccurs="0"></xsd:element>
+					<xsd:element name="logp" type="xsd:float" maxOccurs="1"
+						minOccurs="0"></xsd:element>
+					<xsd:element name="desolv_apolar" type="xsd:float"
+						maxOccurs="1" minOccurs="0"></xsd:element>
+					<xsd:element name="desolv_polar" type="xsd:float"
+						maxOccurs="1" minOccurs="0"></xsd:element>
+					<xsd:element name="hbd" type="xsd:integer" maxOccurs="1"
+						minOccurs="0"></xsd:element>
+					<xsd:element name="hba" type="xsd:integer" maxOccurs="1"
+						minOccurs="0"></xsd:element>
+					<xsd:element name="tpsa" type="xsd:integer" maxOccurs="1"
+						minOccurs="0"></xsd:element>
+					<xsd:element name="charge" type="xsd:integer" maxOccurs="1"
+						minOccurs="0"></xsd:element>
+					<xsd:element name="nrb" type="xsd:integer" maxOccurs="1"
+						minOccurs="0"></xsd:element>
+					<xsd:element name="smiles" type="xsd:string" maxOccurs="1"
+						minOccurs="0"></xsd:element>
+				</xsd:sequence>
+			</xsd:complexType>
+			
+				<xsd:complexType name="Results">
+		<xsd:sequence>
+			<xsd:element name="Result" type="xsd:string" maxOccurs="unbounded"
+				minOccurs="0"></xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+		<xsd:complexType name="FilterParams">
+		<xsd:sequence>
+			<xsd:element name="min_mwt" type="xsd:float" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="max_mwt" type="xsd:float" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="min_logp" type="xsd:float" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="max_logp" type="xsd:float" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="min_desolv_apolar" type="xsd:float"
+				maxOccurs="1" minOccurs="0"></xsd:element>
+			<xsd:element name="max_desolv_apolar" type="xsd:float"
+				maxOccurs="1" minOccurs="0"></xsd:element>
+			<xsd:element name="min_desolv_polar" type="xsd:float"
+				maxOccurs="1" minOccurs="0"></xsd:element>
+			<xsd:element name="max_desolv_polar" type="xsd:float"
+				maxOccurs="1" minOccurs="0"></xsd:element>
+			<xsd:element name="min_hbd" type="xsd:integer" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="max_hbd" type="xsd:integer" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="min_hba" type="xsd:integer" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="max_hba" type="xsd:integer" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="min_tpsa" type="xsd:integer" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="max_tpsa" type="xsd:integer" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="min_charge" type="xsd:integer" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="max_charge" type="xsd:integer" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="min_nrb" type="xsd:integer" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="max_nrb" type="xsd:integer" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="smiles" type="xsd:string" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="supplier" type="xsd:string" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+			<xsd:element name="min_suppliers" type="xsd:string" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+		<xsd:complexType name="VinaParams">
+		<xsd:sequence>
+			<xsd:element name="center_x" type="xsd:float" maxOccurs="1"
+				minOccurs="1">
+			</xsd:element>
+			<xsd:element name="center_y" type="xsd:float" maxOccurs="1"
+				minOccurs="1">
+			</xsd:element>
+			<xsd:element name="center_z" type="xsd:float" maxOccurs="1"
+				minOccurs="1">
+			</xsd:element>
+			<xsd:element name="size_x" type="xsd:integer" maxOccurs="1"
+				minOccurs="1">
+			</xsd:element>
+			<xsd:element name="size_y" type="xsd:integer" maxOccurs="1"
+				minOccurs="1">
+			</xsd:element>
+			<xsd:element name="size_z" type="xsd:integer" maxOccurs="1"
+				minOccurs="1">
+			</xsd:element>
+			<xsd:element name="exhaustiveness" type="xsd:integer" maxOccurs="1"
+				minOccurs="0">
+			</xsd:element>
+			<xsd:element name="seed" type="xsd:integer" maxOccurs="1"
+				minOccurs="0">
+			</xsd:element>
+			<xsd:element name="num_modes" type="xsd:integer" maxOccurs="1"
+				minOccurs="0">
+			</xsd:element>
+			<xsd:element name="energy_range" type="xsd:integer" maxOccurs="1"
+				minOccurs="0"></xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+		</xsd:schema></wsdl:types>
+	<wsdl:message name="doAddNewCompoundRequest">
+		<wsdl:part name="ownerId" type="xsd:string" />
+		<wsdl:part name="compoundId" type="xsd:string"></wsdl:part>
+		<wsdl:part name="compound" type="xsd:string"></wsdl:part>
+		<wsdl:part name="overwrite" type="xsd:boolean"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doAddNewCompoundResponse">
+		<wsdl:part name="response" type="tns:ShortResponse" />
+	</wsdl:message>
+	<wsdl:message name="doAddNewCompoundFault">
+		<wsdl:part name="fault" type="tns:ShortResponse"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doAdvancedAddNewCompoundRequest">
+		<wsdl:part name="compound" type="tns:NewCompound"></wsdl:part>
+		<wsdl:part name="overwrite" type="xsd:boolean"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doAdvancedAddNewCompoundResponse">
+		<wsdl:part name="response" type="tns:ShortResponse"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doAdvancedAddNewCompoundFault">
+		<wsdl:part name="fault" type="tns:ShortResponse"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doDeleteResultsRequest">
+		<wsdl:part name="ownerId" type="xsd:string"></wsdl:part>
+		<wsdl:part name="jobId" type="xsd:int"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doDeleteResultsResponse">
+		<wsdl:part name="response" type="tns:ShortResponse"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doDeleteResultsFault">
+		<wsdl:part name="fault" type="tns:ShortResponse"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doForceReturnResultsRequest">
+		<wsdl:part name="ownerId" type="xsd:string"></wsdl:part>
+		<wsdl:part name="jobId" type="xsd:int"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doForceReturnResultsResponse">
+		<wsdl:part name="response" type="tns:Results"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doForceReturnResultsFault">
+		<wsdl:part name="fault" type="tns:ShortResponse"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doReturnResultsRequest">
+		<wsdl:part name="ownerId" type="xsd:string"></wsdl:part>
+		<wsdl:part name="jobId" type="xsd:int"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doReturnResultsResponse">
+		<wsdl:part name="response" type="tns:Results"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doReturnResultsFault">
+		<wsdl:part name="fault" type="tns:ShortResponse"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doReturnStatusRequest">
+		<wsdl:part name="ownerId" type="xsd:string"></wsdl:part>
+		<wsdl:part name="jobId" type="xsd:int"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doReturnStatusResponse">
+		<wsdl:part name="response" type="tns:ShortResponse"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doSearchRequest">
+		<wsdl:part name="receptor" type="xsd:string"></wsdl:part>
+		<wsdl:part name="ownerId" type="xsd:string"></wsdl:part>
+		<wsdl:part name="vinaParams" type="tns:VinaParams"></wsdl:part>
+		<wsdl:part name="filterParams" type="tns:FilterParams"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doSearchResponse">
+		<wsdl:part name="response" type="tns:ShortResponse"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doReturnStatusFault">
+		<wsdl:part name="fault" type="tns:ShortResponse"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doSearchFault">
+		<wsdl:part name="fault" type="tns:ShortResponse"></wsdl:part>
+	</wsdl:message>
+	<wsdl:portType name="Cumulus">
+		<wsdl:operation name="doAddNewCompound">
+			<wsdl:input message="tns:doAddNewCompoundRequest" />
+			<wsdl:output message="tns:doAddNewCompoundResponse" />
+			<wsdl:fault name="fault" message="tns:doAddNewCompoundFault"></wsdl:fault>
+		</wsdl:operation>
+		<wsdl:operation name="doAdvancedAddNewCompound">
+			<wsdl:input message="tns:doAdvancedAddNewCompoundRequest"></wsdl:input>
+			<wsdl:output message="tns:doAdvancedAddNewCompoundResponse"></wsdl:output>
+            <wsdl:fault name="fault" message="tns:doAdvancedAddNewCompoundFault"></wsdl:fault>
+        </wsdl:operation>
+		<wsdl:operation name="doDeleteResults">
+			<wsdl:input message="tns:doDeleteResultsRequest"></wsdl:input>
+			<wsdl:output message="tns:doDeleteResultsResponse"></wsdl:output>
+            <wsdl:fault name="fault" message="tns:doDeleteResultsFault"></wsdl:fault>
+        </wsdl:operation>
+		<wsdl:operation name="doForceReturnResults">
+			<wsdl:input message="tns:doForceReturnResultsRequest"></wsdl:input>
+			<wsdl:output message="tns:doForceReturnResultsResponse"></wsdl:output>
+            <wsdl:fault name="fault" message="tns:doForceReturnResultsFault"></wsdl:fault>
+        </wsdl:operation>
+		<wsdl:operation name="doReturnResults">
+			<wsdl:input message="tns:doReturnResultsRequest"></wsdl:input>
+			<wsdl:output message="tns:doReturnResultsResponse"></wsdl:output>
+            <wsdl:fault name="fault" message="tns:doReturnResultsFault"></wsdl:fault>
+        </wsdl:operation>
+		<wsdl:operation name="doReturnStatus">
+			<wsdl:input message="tns:doReturnStatusRequest"></wsdl:input>
+			<wsdl:output message="tns:doReturnStatusResponse"></wsdl:output>
+            <wsdl:fault name="fault" message="tns:doReturnStatusFault"></wsdl:fault>
+        </wsdl:operation>
+		<wsdl:operation name="doSearch">
+			<wsdl:input message="tns:doSearchRequest"></wsdl:input>
+			<wsdl:output message="tns:doSearchResponse"></wsdl:output>
+            <wsdl:fault name="fault" message="tns:doSearchFault"></wsdl:fault>
+        </wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name="CumulusHTTP" type="tns:Cumulus">
+		<http:binding verb="POST" />
+		<wsdl:operation name="doAddNewCompound">
+			<http:operation location="/doAddNewCompound" />
+			<wsdl:input>
+				<mime:content type="application/x-www-form-urlencoded" />
+			</wsdl:input>
+			<wsdl:output>
+				<mime:content type="text/xml" />
+			</wsdl:output>
+			<wsdl:fault name="fault"></wsdl:fault>
+		</wsdl:operation>
+		<wsdl:operation name="doAdvancedAddNewCompound">
+			<http:operation location="/doAdvancedAddNewCompound" />
+			<wsdl:input>
+				<mime:content type="application/x-www-form-urlencoded" />
+			</wsdl:input>
+			<wsdl:output>
+				<mime:content type="text/xml" />
+			</wsdl:output>
+			<wsdl:fault name="fault"></wsdl:fault>
+		</wsdl:operation>
+		<wsdl:operation name="doDeleteResults">
+			<http:operation location="/doDeleteJob" />
+			<wsdl:input>
+				<mime:content type="application/x-www-form-urlencoded" />
+			</wsdl:input>
+			<wsdl:output>
+				<mime:content type="text/xml" />
+			</wsdl:output>
+			<wsdl:fault name="fault"></wsdl:fault>
+		</wsdl:operation>
+		<wsdl:operation name="doForceReturnResults">
+			<http:operation location="/doForceReturnResults" />
+			<wsdl:input>
+				<mime:content type="application/x-www-form-urlencoded" />
+			</wsdl:input>
+			<wsdl:output>
+				<mime:content type="text/xml" />
+			</wsdl:output>
+			<wsdl:fault name="fault"></wsdl:fault>
+		</wsdl:operation>
+		<wsdl:operation name="doReturnResults">
+			<http:operation location="/doReturnResults" />
+			<wsdl:input>
+				<mime:content type="application/x-www-form-urlencoded" />
+			</wsdl:input>
+			<wsdl:output>
+				<mime:content type="text/xml" />
+			</wsdl:output>
+			<wsdl:fault name="fault"></wsdl:fault>
+		</wsdl:operation>
+		<wsdl:operation name="doReturnStatus">
+			<http:operation location="/doReturnStatus" />
+			<wsdl:input>
+				<mime:content type="application/x-www-form-urlencoded" />
+			</wsdl:input>
+			<wsdl:output>
+				<mime:content type="text/xml" />
+			</wsdl:output>
+			<wsdl:fault name="fault"></wsdl:fault>
+		</wsdl:operation>
+		<wsdl:operation name="doSearch">
+			<http:operation location="/doSearch" />
+			<wsdl:input>
+				<mime:content type="application/x-www-form-urlencoded" />
+			</wsdl:input>
+			<wsdl:output>
+				<mime:content type="text/xml" />
+			</wsdl:output>
+			<wsdl:fault name="fault"></wsdl:fault>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name="Cumulus">
+		<wsdl:port binding="tns:CumulusHTTP" name="CumulusHTTP">
+			<http:address location="http://localhost:8080/com.btechconsulting.wein.cumulus/rest" />
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>

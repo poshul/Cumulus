@@ -13,15 +13,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.Logger;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.btechconsulting.wein.cumulus.CreateShortReturn;
 import com.btechconsulting.wein.cumulus.model.FilterParams;
-import com.btechconsulting.wein.cumulus.model.ShortResponse;
 import com.btechconsulting.wein.cumulus.model.VinaParams;
 import com.btechconsulting.wein.cumulus.workUnitGenerator.WorkUnitGenerator;
 
@@ -38,33 +37,49 @@ public class DoSearchHandler implements RestHandler {
 	private final Logger logger= Logger.getLogger(DoSearchHandler.class);
 	public void executeSearch(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
+		
+		response.setContentType("text/xml");
+		Writer writer= response.getWriter();
+
 		//parse input to make sure it is compliant with spec.
 		String[] ownerIds= request.getParameterValues(OWNERID);
 		if (ownerIds==null|| ownerIds.length!=1){
 			logger.debug("User didn't supply an ownerId");
 			System.err.println(ownerIds);
-			throw new ServletException("You must supply an ownerId");
+			String error="You must supply an ownerId";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 		String ownerId=ownerIds[0];
 
 		String[] vinaParamss= request.getParameterValues(VINAPARAMS);
 		if (vinaParamss==null||vinaParamss.length!=1){
 			logger.debug("User didn't supply any vinaParams");
-			throw new ServletException("You must supply one set of vinaparams");
+			String error="You must supply one set of vinaparams";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 		String vinaParams=vinaParamss[0];
 
 		String[] receptors= request.getParameterValues(RECEPTOR);
 		if (receptors==null||receptors.length!=1){
 			logger.debug("User didn't supply a receptor");
-			throw new ServletException("You must supply one receptor");
+			String error="You must supply one receptor";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 		String receptor= receptors[0];
 
 		String[] filterParamss= request.getParameterValues(FILTERPARAMS);
 		if (filterParamss==null||filterParamss.length!=1){
 			logger.debug("User didn't supply any filterParams");
-			throw new ServletException("You must supply one set of filterParams");
+			String error="You must supply one set of filterParams";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 		String filterParams= filterParamss[0];
 
@@ -79,7 +94,10 @@ public class DoSearchHandler implements RestHandler {
 		}
 		catch (JAXBException jbe) {
 			logger.warn("user supplied badly formed vinaParams");
-			throw new ServletException("Please make sure the vinaParams is well formatted");
+			String error="Please make sure the vinaParams is well formatted";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 
 		//test that FilterParams is well formed
@@ -92,37 +110,43 @@ public class DoSearchHandler implements RestHandler {
 		}
 		catch (JAXBException jbe) {
 			logger.warn("user supplied badly formed filterParams");
-			throw new ServletException("Please make sure the filterParams is well formatted");
+			String error="Please make sure the filterParams is well formatted";
+			response.setStatus(400);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 
 		try {
 			Integer jobId= WorkUnitGenerator.BuildJob(receptor, ownerId, vinaParamsObj, filterParamsObj);
-			response.setContentType("text/xml");
 			response.setStatus(200);
 			response.addIntHeader(JOBID, jobId);
-
-			Writer writer= response.getWriter();
-
-			JAXBContext context = JAXBContext.newInstance(ShortResponse.class);
-			Marshaller m = context.createMarshaller();
-			ShortResponse responseXml= new ShortResponse();
-			responseXml.setIsError(false);
-			responseXml.setResponse(jobId.toString());
-			m.marshal(responseXml, writer);
+			writer.write(CreateShortReturn.createShortResponse(jobId.toString(), false));
 		}
 		//TODO return number of units created to 
 		catch (AmazonServiceException ase) {
 			logger.error(ase);
-			throw new ServletException("Error in AWS please try again later.");
+			String error="Error in AWS please try again later.";
+			response.setStatus(500);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		} catch (AmazonClientException ace) {
 			logger.error(ace);
-			throw new ServletException("Internal error please try again");
+			String error="Internal error please try again";
+			response.setStatus(500);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		} catch (SQLException sqle) {
 			logger.error(sqle);
-			throw new ServletException("Error connecting to SQL please try again later");
+			String error="Error connecting to SQL please try again later";
+			response.setStatus(500);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		} catch (JAXBException jaxbe) {
 			logger.error(jaxbe);
-			throw new ServletException("Internal JAXB error");
+			String error="Internal JAXB error";
+			response.setStatus(500);
+			writer.write(CreateShortReturn.createShortResponse(error, true));
+			return;
 		}
 
 
