@@ -75,7 +75,7 @@ public class DoReturnStatusHandler implements RestHandler {
 		}
 		catch(IllegalStateException ise){
 			String error=ise.getMessage();
-			response.setStatus(500);
+			response.setStatus(400);
 			writer.write(CreateShortReturn.createShortResponse(error, true));
 			return;
 			//TODO deal with invalid owner and job ID's 

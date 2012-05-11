@@ -352,6 +352,7 @@ public class Initializer {
 	public synchronized void putWorkUnit(
 			String userID, Integer jobID, Integer workUnitID, wUStatus newStatus){
 		this.unitsOnServer.get(userID).get(jobID).put(workUnitID, newStatus);
+		//FIXME nullpointerexception is generated when SQS state doesn't match internal state.
 	}
 
 	/**

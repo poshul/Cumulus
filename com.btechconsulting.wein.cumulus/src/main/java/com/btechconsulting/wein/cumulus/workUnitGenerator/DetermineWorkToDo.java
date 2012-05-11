@@ -161,7 +161,7 @@ public class DetermineWorkToDo {
 	 * TODO remove
 	 * @param args
 	 */
-	public static void main(String[] args) {
+/*	public static void main(String[] args) {
 		try {
 			FilterParams filter =new FilterParams();
 			filter.setMaxNrb(0);
@@ -172,5 +172,5 @@ public class DetermineWorkToDo {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-	}
+	}*/
 }

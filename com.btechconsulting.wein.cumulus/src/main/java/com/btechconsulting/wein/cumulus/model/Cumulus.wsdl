@@ -208,6 +208,16 @@
 	<wsdl:message name="doSearchFault">
 		<wsdl:part name="fault" type="tns:ShortResponse"></wsdl:part>
 	</wsdl:message>
+	<wsdl:message name="doFindJobSizeRequest">
+		<wsdl:part name="ownerId" type="xsd:string"></wsdl:part>
+		<wsdl:part name="filterParams" type="tns:FilterParams"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doFindJobSizeResponse">
+		<wsdl:part name="response" type="tns:ShortResponse"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="doFindJobSizeFault">
+		<wsdl:part name="fault" type="tns:ShortResponse"></wsdl:part>
+	</wsdl:message>
 	<wsdl:portType name="Cumulus">
 		<wsdl:operation name="doAddNewCompound">
 			<wsdl:input message="tns:doAddNewCompoundRequest" />
@@ -243,6 +253,11 @@
 			<wsdl:input message="tns:doSearchRequest"></wsdl:input>
 			<wsdl:output message="tns:doSearchResponse"></wsdl:output>
             <wsdl:fault name="fault" message="tns:doSearchFault"></wsdl:fault>
+        </wsdl:operation>
+		<wsdl:operation name="doFindJobSize">
+			<wsdl:input message="tns:doFindJobSizeRequest"></wsdl:input>
+			<wsdl:output message="tns:doFindJobSizeResponse"></wsdl:output>
+            <wsdl:fault name="fault" message="tns:doFindJobSizeFault"></wsdl:fault>
         </wsdl:operation>
 	</wsdl:portType>
 	<wsdl:binding name="CumulusHTTP" type="tns:Cumulus">

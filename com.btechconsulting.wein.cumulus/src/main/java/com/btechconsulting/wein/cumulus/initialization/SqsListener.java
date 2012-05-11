@@ -24,7 +24,7 @@ class SqsListener implements Runnable {
 	 */
 	static final Logger logger=Logger.getLogger(SqsListener.class);
 	Initializer papa;
-	
+
 	public SqsListener(Initializer parent) {
 		this.papa=parent;
 	}
