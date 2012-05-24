@@ -1,13 +1,20 @@
 package com.btechconsulting.wein.cumulus.initialization;
 
+import java.util.Date;
+
 import org.apache.log4j.Logger;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+import com.amazonaws.services.ec2.model.DescribeSpotInstanceRequestsRequest;
+import com.amazonaws.services.ec2.model.DescribeSpotInstanceRequestsResult;
+import com.amazonaws.services.ec2.model.DescribeSpotPriceHistoryRequest;
+import com.amazonaws.services.ec2.model.DescribeSpotPriceHistoryResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Reservation;
+import com.amazonaws.services.ec2.model.SpotInstanceRequest;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.GetQueueAttributesRequest;
 
@@ -57,10 +64,16 @@ public class GridManager implements Runnable {
 			//check the number of running instances.
 			DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest();
 			//get the number of running instances with our image ID
+			//TODO add the number of pending spot requests.
 			describeInstancesRequest.withFilters(new Filter("image-id").withValues(Constants.imageID),new Filter("instance-state-name").withValues("running"));
 			logger.debug("Getting list of active cumulus drones");
 			Integer numInstances=null;
+			Integer numSpotRequests=null;
+			//check number of open spot requests
+			DescribeSpotInstanceRequestsRequest describeSpotInstancesRequest= new DescribeSpotInstanceRequestsRequest();
+			describeSpotInstancesRequest.withFilters(new Filter("state").withValues("open"));
 			try{
+				//Parse returned instances
 				DescribeInstancesResult describeInstancesResult = ec2Client.describeInstances(describeInstancesRequest);
 				if(describeInstancesResult.getReservations().size()==0)
 				{
@@ -72,6 +85,19 @@ public class GridManager implements Runnable {
 					}
 					numInstances=totalInstances;
 				}
+				//Parse returned open spot requests
+				DescribeSpotInstanceRequestsResult describeSpotReservationsResult = ec2Client.describeSpotInstanceRequests(describeSpotInstancesRequest);
+				if(describeSpotReservationsResult.getSpotInstanceRequests().size()==0)
+				{
+					numSpotRequests=0;
+				}else {
+					Integer totalInstances=0;
+					for(SpotInstanceRequest i:describeSpotReservationsResult.getSpotInstanceRequests()){
+						totalInstances++;
+					}
+					numSpotRequests=totalInstances;
+				}
+				
 				//System.out.println("num instances="+numInstances);
 			} catch (AmazonServiceException e) {
 				// Write out any exceptions that may have occurred.
@@ -87,18 +113,39 @@ public class GridManager implements Runnable {
 				System.err.println("Did not exit cleanly");
 				//System.exit(1);
 			}
-			if (numInstances==null){
-				logger.error("Couldn't get the number of items in the queue reverting to static functioning");
+			if (numInstances==null|| numSpotRequests==null){
+				logger.error("Couldn't get the number of machines or requests reverting to static functioning");
 				break;
 			}
-			System.out.println("num instances="+numInstances);
+			System.out.println("num instances="+(numInstances+numSpotRequests));
 
 			// if queue is longer than the number of instances * idealMaxUnitsPerInstance
-			if(sqsResult>numInstances*Constants.idealMaxUnitsPerInstance){
+			if(sqsResult>(numInstances+numSpotRequests)*Constants.idealMaxUnitsPerInstance){ // we count pending spot instances too.
 				Integer numToCreate= (sqsResult/Constants.idealMaxUnitsPerInstance)-numInstances+1;
+				//check current pricing of spot instances
+				DescribeSpotPriceHistoryRequest historyRequest= new DescribeSpotPriceHistoryRequest()
+				.withAvailabilityZone("us-east-1c")
+				.withInstanceTypes(Constants.instanceType)
+				.withProductDescriptions("Linux/UNIX (Amazon VPC)")
+				.withStartTime(new Date(System.currentTimeMillis()));
+				DescribeSpotPriceHistoryResult result= ec2Client.describeSpotPriceHistory(historyRequest);
+				Double nowPrice= Double.valueOf(result.getSpotPriceHistory().get(0).getSpotPrice());
+				//If spot price is < constants.spotPrice launch numToCreate*Constants.percentSpot spot instances
+				Integer spotToCreate=0;
+				if (nowPrice<Double.valueOf(Constants.spotPrice)){
+					spotToCreate=(int) (numToCreate*Constants.percentSpot);
+					numToCreate=(int) (numToCreate*(1-Constants.percentSpot));
+				}
 				try {
-					System.out.println(numToCreate);
+					System.out.println("regular instances: "+numToCreate);
+					System.out.println("spot instances: "+ spotToCreate);
+					//Create regular and spot instances
+					if (numToCreate>0){
 					papa.createInstances(ec2Client, numToCreate);
+					}
+					if (spotToCreate>0){
+					papa.createSpotInstances(ec2Client, spotToCreate);
+					}
 					System.out.println("created instances");
 				} catch (Exception e) {
 					// TODO Deal with ec2 exceptions

@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.btechconsulting.wein.cumulus</groupId>
 	<artifactId>com.btechconsulting.wein.cumulus</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2</version>
 	<name>Cumulus</name>
 	<description>chem cloud middleware</description>
 	<dependencies>

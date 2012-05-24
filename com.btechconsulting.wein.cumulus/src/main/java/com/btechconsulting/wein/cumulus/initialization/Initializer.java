@@ -31,6 +31,9 @@ import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.LaunchSpecification;
+import com.amazonaws.services.ec2.model.RequestSpotInstancesRequest;
+import com.amazonaws.services.ec2.model.RequestSpotInstancesResult;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
@@ -194,6 +197,32 @@ public class Initializer {
 			.withTags(new Tag("return", this.returnQueue));
 			ec2.createTags(createTagsRequest);
 		}
+	}
+	
+
+	/*
+	 * @param ec2: an ec2 client
+	 * @param instancesIn: the number of instances to create
+	 * This creates a spot request for the specified number of instances of nimbus
+	 */
+	void createSpotInstances(AmazonEC2Client ec2, Integer instancesIn) throws Exception{
+		//set the zone
+				ec2.setEndpoint(Constants.ec2Region);
+				System.out.println("Intializing "+instancesIn+" instances\n");
+				//create EC2 instances
+				RequestSpotInstancesRequest requestSpotRequest = new RequestSpotInstancesRequest()
+				.withSpotPrice(Constants.spotPrice)
+				.withLaunchSpecification(
+						new LaunchSpecification()
+						.withImageId(Constants.imageID)
+						.withSecurityGroups(Constants.securityGroupID)
+						.withKeyName(Constants.keyName)
+						.withInstanceType(Constants.instanceType))
+				.withInstanceCount(instancesIn);
+				RequestSpotInstancesResult runInstances = ec2.requestSpotInstances(requestSpotRequest);
+				System.out.println(runInstances.toString());
+
+
 	}
 	
 	/*
