@@ -101,7 +101,7 @@
 				<shutdownCommand>/sbin/shutdown</shutdownCommand>
 				<shutdownModifier>-k</shutdownModifier>
 				<waitTime>600000</waitTime>
-				<JDBCURL>jdbc:mysql://ec2-23-20-154-27.compute-1.amazonaws.com/cumulus</JDBCURL>
+				<JDBCURL>jdbc:mysql://ec2-174-129-131-83.compute-1.amazonaws.com/cumulus</JDBCURL>
 				<JDBCUser>cumulus</JDBCUser>
 				<JDBCPassword>s3mir4ndom</JDBCPassword>
 				<onCloud>false</onCloud>
@@ -125,7 +125,7 @@
 				<shutdownCommand>/sbin/shutdown</shutdownCommand>
 				<shutdownModifier>-k</shutdownModifier>
 				<waitTime>600000</waitTime>
-				<JDBCURL>jdbc:mysql://10.242.210.159/cumulus</JDBCURL>
+				<JDBCURL>jdbc:mysql://10.80.219.70/cumulus</JDBCURL>
 				<JDBCUser>cumulus</JDBCUser>
 				<JDBCPassword>s3mir4ndom</JDBCPassword>
 				<onCloud>true</onCloud>

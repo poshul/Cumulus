@@ -215,7 +215,7 @@ public class Main {
 					timer=0L;
 				}
 				//Retrieve workunit
-				logger.info("Got workunit");
+				logger.debug("Got workunit");
 				String receiptHandle= messageList.get(0).getReceiptHandle();
 				String marshalledWorkUnit= messageList.get(0).getBody();
 				//unmarshall workunit
@@ -435,7 +435,7 @@ public class Main {
 					}else {
 
 						try {
-							logger.info(returnString.get());
+							logger.debug(returnString.get());
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 							logger.error("Execution was interrupted.  This is bad");
@@ -502,7 +502,7 @@ public class Main {
 
 						//put results into sql
 						String resultsStatement="INSERT INTO cumulus.results (owner_id, job_id, workunit_id, results) VALUE('"+unMarshalledUnit.getOwnerID()+"','"+unMarshalledUnit.getJobID()+"','"+unMarshalledUnit.getWorkUnitID()+"','"+results+"');";
-						logger.info(resultsStatement);
+						logger.debug(resultsStatement);
 						try {
 
 							stmt.executeUpdate(resultsStatement);

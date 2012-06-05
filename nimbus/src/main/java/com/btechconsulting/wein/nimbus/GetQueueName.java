@@ -72,7 +72,7 @@ public class GetQueueName {
 	
 	/**
 	 * 
-	 * @param instanceIdLoc TODO
+	 * @param instanceIdLoc the address of the instance metadata
 	 * @return the unique instance ID of this instance if run on an EC2 instance or null otherwise
 	 */
 	public static String GetInstanceID(String instanceIdLoc) throws IllegalStateException{
