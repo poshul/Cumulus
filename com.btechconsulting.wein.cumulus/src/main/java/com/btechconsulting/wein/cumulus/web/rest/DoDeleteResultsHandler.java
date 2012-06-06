@@ -95,7 +95,6 @@ public class DoDeleteResultsHandler implements RestHandler {
 				m.marshal(responseXml, writer);
 				conn.close();
 			} catch (JAXBException e3) {
-				// TODO Auto-generated catch block
 				e3.printStackTrace();
 				String error="Couldn't marshall result";
 				response.setStatus(500);

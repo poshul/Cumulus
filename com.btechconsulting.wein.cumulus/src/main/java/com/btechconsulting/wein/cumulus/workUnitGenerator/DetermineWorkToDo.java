@@ -154,23 +154,4 @@ public class DetermineWorkToDo {
 		conn.close();
 		return resultstring;
 	}
-
-
-	/**
-	 * Test code
-	 * TODO remove
-	 * @param args
-	 */
-/*	public static void main(String[] args) {
-		try {
-			FilterParams filter =new FilterParams();
-			filter.setMaxNrb(0);
-			DetermineWorkToDo newwork= new DetermineWorkToDo("blah","0",filter);
-			newwork.PutReceptorInDatabase();
-			List<String> ids= newwork.FilterCompoundsInDatabase();
-			WorkUnitGenerator generator = new WorkUnitGenerator();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}*/
 }

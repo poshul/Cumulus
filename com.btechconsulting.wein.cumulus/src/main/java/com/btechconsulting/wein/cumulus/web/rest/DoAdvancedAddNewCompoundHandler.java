@@ -146,7 +146,6 @@ public class DoAdvancedAddNewCompoundHandler implements RestHandler {
 					con.setAutoCommit(true);
 					con.close();
 				} catch (SQLException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace(System.err);
 					String error="Couldn't add compound to database.  Please contact an administrator before trying again.";
 					response.setStatus(500);

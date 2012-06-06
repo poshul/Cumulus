@@ -81,7 +81,6 @@ public class DoReturnResultsHandler implements RestHandler {
 		}
 		//only proceed if we are done
 		if (isDone){
-			//TODO parse all results, return a list of ERROR, and DONE
 
 			//get all of the results from the database
 			String query="SELECT results FROM cumulus.results WHERE owner_id='"+ownerId+"' AND job_id='"+jobId+"';";

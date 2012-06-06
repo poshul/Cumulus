@@ -64,7 +64,6 @@ public class GridManager implements Runnable {
 			//check the number of running instances.
 			DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest();
 			//get the number of running instances with our image ID
-			//TODO add the number of pending spot requests.
 			describeInstancesRequest.withFilters(new Filter("image-id").withValues(Constants.imageID),new Filter("instance-state-name").withValues("running"));
 			logger.debug("Getting list of active cumulus drones");
 			Integer numInstances=null;
@@ -148,7 +147,8 @@ public class GridManager implements Runnable {
 					}
 					System.out.println("created instances");
 				} catch (Exception e) {
-					// TODO Deal with ec2 exceptions
+					// Report ec2 exceptions
+					logger.error(e);
 					e.printStackTrace();
 					continue;
 				}

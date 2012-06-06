@@ -50,7 +50,7 @@ public class WorkUnitGenerator {
 		for(String i:compoundIDs){
 			SendMessageBatchRequestEntry entry=putWorkUnitInSQSBatch(BuildWorkUnit(receptorID, i, ownerID, jobID, workUnitId, vinaParams));
 			batch.add(entry);
-			Initializer.getInstance().putWorkUnit(ownerID, jobID, workUnitId, wUStatus.INFLIGHT);//TODO this needs to be atomic with the actual adding of the unit to sqs
+			Initializer.getInstance().putWorkUnit(ownerID, jobID, workUnitId, wUStatus.INFLIGHT);
 			workUnitId++;
 			iter++;
 			if (iter>=10){
