@@ -89,7 +89,7 @@ public class VinaCaller implements Callable<String> {
 		command.add("--out");
 		command.add(outLocation);
 		command.addAll(this.DecodeVinaParams());
-		System.out.println(command);
+		//System.out.println(command);
 		//run vina
 		Process process = new ProcessBuilder(command).start();
 		//wait for the process to finish

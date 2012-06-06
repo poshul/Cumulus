@@ -197,7 +197,7 @@ public class Main {
 						logger.debug("No work now");
 						timer=System.currentTimeMillis();
 					}if (System.currentTimeMillis()-timer>WAITTIME){//if we have waited as long as we can
-						logger.error("We ran out of work");
+						logger.warn("We ran out of work");
 						System.exit(0);
 					}
 					try {
@@ -230,7 +230,6 @@ public class Main {
 				}
 
 				if (unMarshalledUnit==null){
-					//TODO: Notify administrator
 					logger.error("Unmarshalled work unit is null");
 				}
 
@@ -283,7 +282,7 @@ public class Main {
 						}
 
 						if (moleculeString==null||moleculeString.equals("")){
-							logger.error("Molecule pdbqt was null");
+							logger.warn("Molecule pdbqt was null");
 							returnU.setStatus("ERROR");
 							try {
 								SendStatusToReturnQueue(client, returnQueue, returnU);

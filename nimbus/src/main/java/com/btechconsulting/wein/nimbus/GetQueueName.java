@@ -86,6 +86,7 @@ public class GetQueueName {
 			e.printStackTrace();
 			throw new IllegalStateException("HTTP client exception "+e);
 		} catch (IOException e) {
+			logger.warn("IOexception getting InstanceID, are we running on an EC2 Instance?");
 			System.err.println("IOexception getting InstanceID, are we running on an EC2 Instance?");
 			e.printStackTrace();
 		}finally{
