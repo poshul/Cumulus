@@ -14,7 +14,7 @@ import org.apache.tomcat.dbcp.dbcp.PoolingDataSource;
 import org.apache.tomcat.dbcp.pool.ObjectPool;
 import org.apache.tomcat.dbcp.pool.impl.GenericObjectPool;
 
-//imported from cumulus.  TODO change this to non pooled connections
+//imported from cumulus.
 
 public enum PooledConnectionFactory {
 	INSTANCE;

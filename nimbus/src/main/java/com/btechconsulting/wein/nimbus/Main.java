@@ -226,7 +226,6 @@ public class Main {
 
 				catch (JAXBException e) {
 					logger.error("Couldn't unmarshall WorkUnit");
-					// Need to notify administrator here TODO
 				}
 
 				if (unMarshalledUnit==null){
@@ -260,7 +259,7 @@ public class Main {
 				}
 				if (numResults==0){
 					//get receptor and molecule from sql
-					String receptorQuery= "SELECT pdbqtfile FROM cumulus.receptor WHERE sha256='"+unMarshalledUnit.getPointerToReceptor()+"' AND( owner_id='"+unMarshalledUnit.getOwnerID()+"' "+"OR owner_id='0');";
+					String receptorQuery= "SELECT pdbqtfile FROM cumulus.receptor WHERE sha256='"+unMarshalledUnit.getPointerToReceptor()+"' AND( owner_id='"+unMarshalledUnit.getOwnerID()+"';";//+"OR owner_id='0');";
 					String moleculeQuery= "SELECT pdbqt FROM cumulus.mol_properties WHERE compound_id='"+unMarshalledUnit.getPointerToMolecule()+"' AND( owner_id='"+unMarshalledUnit.getOwnerID()+"' "+"OR owner_id='0');";
 					//logger.info(moleculeQuery);
 					String receptorString=null;
@@ -294,7 +293,7 @@ public class Main {
 							}
 							break; //this breaks from the inner while true loop
 						}
-						
+
 						//Decode base64 encoded receptor
 						byte[] receptorByteArray = DatatypeConverter.parseBase64Binary(receptorString);
 						receptorString=new String(receptorByteArray);
@@ -492,10 +491,10 @@ public class Main {
 							}
 							ioe.printStackTrace();
 						}
-						if (results==null){
+						if (results=="REMARK Compound name:"+unMarshalledUnit.getPointerToMolecule()+"\n"){
 							results=unMarshalledUnit.getPointerToMolecule()+": No confirmations were found with submitted parameters";
 						}
-						
+
 						//Convert the results into base64
 						results=DatatypeConverter.printBase64Binary(results.getBytes());
 
@@ -503,22 +502,32 @@ public class Main {
 						String resultsStatement="INSERT INTO cumulus.results (owner_id, job_id, workunit_id, results) VALUE('"+unMarshalledUnit.getOwnerID()+"','"+unMarshalledUnit.getJobID()+"','"+unMarshalledUnit.getWorkUnitID()+"','"+results+"');";
 						logger.debug(resultsStatement);
 						try {
-
 							stmt.executeUpdate(resultsStatement);
 
 						} catch (SQLException e1) {
-							logger.error("Couldn't put results into SQL");//TODO deal with duplicate key problems
-							e1.printStackTrace();
-							returnU.setStatus("ERROR");
+							logger.warn("Couldn't put results into SQL");//TODO deal with duplicate key problems
 							try {
-								SendStatusToReturnQueue(client, returnQueue, returnU);
-								DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
-							} catch (JAXBException e2) {
-								e2.printStackTrace();
-								logger.error("Multiple Internal errors");
+								Thread.sleep(10000);
+								stmt.executeUpdate(resultsStatement);
+
+							} catch (SQLException | InterruptedException e3) { //retry once in case the SQL error was intermittant
+								if (e3.equals(SQLException.class)){
+								logger.error("Couldn't put results into SQL on second try");//TODO deal with duplicate key problems
+								}else{
+									logger.error("Interrupted");//TODO deal with duplicate key problems
+								}
+								e1.printStackTrace();
+								returnU.setStatus("ERROR");
+								try {
+									SendStatusToReturnQueue(client, returnQueue, returnU);
+									DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
+								} catch (JAXBException e2) {
+									e2.printStackTrace();
+									logger.error("Multiple Internal errors");
+									System.exit(1);
+								}
 								System.exit(1);
 							}
-							System.exit(1);
 						}
 
 						//put results in return queue
