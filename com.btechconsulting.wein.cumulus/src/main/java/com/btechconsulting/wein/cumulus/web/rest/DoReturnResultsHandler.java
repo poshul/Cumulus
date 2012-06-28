@@ -87,7 +87,6 @@ public class DoReturnResultsHandler implements RestHandler {
 			List<String> resultpdbqts =new ArrayList<String>();
 			Statement stmt= null;
 			try {
-				//FIXME intermittant error here
 				Connection conn = PooledConnectionFactory.INSTANCE.getCumulusConnection();
 				stmt= conn.createStatement();
 				ResultSet results= stmt.executeQuery(query);
@@ -96,8 +95,12 @@ public class DoReturnResultsHandler implements RestHandler {
 				}
 				conn.close();
 			} catch (SQLException e) {
-				// TODO deal with ramifications of a sql exception
+				String error="Error connecting to SQL please try again";
+				response.setStatus(500);
+				writer.write(CreateShortReturn.createShortResponse(error, true));
 				e.printStackTrace();
+				logger.error(e);
+				return;
 			}
 			//set up the response
 			response.setStatus(200);

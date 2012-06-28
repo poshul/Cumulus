@@ -49,7 +49,6 @@ public class Main {
 			System.out.println("starting teardown");
 			Initializer.INSTANCE.teardownAll();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}*/

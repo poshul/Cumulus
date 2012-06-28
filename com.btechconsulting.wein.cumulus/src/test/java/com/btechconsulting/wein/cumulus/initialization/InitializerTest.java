@@ -27,7 +27,6 @@ public class InitializerTest {
 		try {
 			Initializer.getInstance().teardownAll();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		

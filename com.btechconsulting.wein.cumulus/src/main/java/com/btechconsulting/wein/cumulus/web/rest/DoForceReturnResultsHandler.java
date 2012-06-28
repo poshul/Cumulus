@@ -82,8 +82,8 @@ public class DoForceReturnResultsHandler implements RestHandler {
 				conn.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
-				String error="Couldn't connect to SQL";
-				response.setStatus(400);
+				String error="Error connecting to SQL please try again";
+				response.setStatus(500);
 				writer.write(CreateShortReturn.createShortResponse(error, true));
 				return;
 			}

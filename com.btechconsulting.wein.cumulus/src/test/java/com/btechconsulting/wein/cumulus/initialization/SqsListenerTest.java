@@ -31,7 +31,6 @@ public class SqsListenerTest {
 		try {
 			Thread.sleep(60000);
 		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		String testUID= "tester";
@@ -69,7 +68,6 @@ public class SqsListenerTest {
 			//It takes a while for the message to become available in SQS.
 			Thread.sleep(10000);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		assertEquals(Initializer.wUStatus.DONE,Initializer.getInstance().getStatusOfWorkUnit(testUID, testjobID, testWorkunitID));

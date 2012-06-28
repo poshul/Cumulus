@@ -35,6 +35,21 @@ public class WorkUnitGenerator {
 	private final Logger logger= Logger.getLogger(WorkUnitGenerator.class);
 
 
+	/**
+	 * This function builds a job based from a receptor, ownerID, set of vinaParams, and set of filterParams.
+	 * The job is submitted to the server and the jobID is returned
+	 * @param receptor
+	 * @param ownerID
+	 * @param vinaParams
+	 * @param filterParams
+	 * @return jobID
+	 * @throws SQLException
+	 * @throws AmazonServiceException
+	 * @throws JAXBException
+	 * @throws AmazonClientException
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
 	public static Integer BuildJob(String receptor, String ownerID, VinaParams vinaParams, FilterParams filterParams) throws SQLException, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
 		//find the new JobID
 		Integer jobID= Initializer.getInstance().getMaxJobID(ownerID)+1;//our jobID is the NEXT integer

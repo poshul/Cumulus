@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import javax.servlet.ServletException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
+import org.apache.log4j.Logger;
 import org.eclipse.jdt.internal.core.index.impl.Int;
 
 import com.amazonaws.AmazonClientException;
@@ -44,6 +46,7 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.DeleteQueueRequest;
 import com.btechconsulting.wein.cumulus.model.WorkUnit;
+import com.btechconsulting.wein.cumulus.workUnitGenerator.DetermineWorkToDo;
 
 /**
  * @author Samuel Wein
@@ -65,6 +68,7 @@ public class Initializer {
 	private Thread sqsListener;
 	private Thread gridManager;
 	private Boolean shuttingDown=false;
+	private final Logger logger= Logger.getLogger(Initializer.class);
 	// units on server is a map of OwnerID to a map of JobID to a map of WorkUnitID to work Unit status
 	// TODO figure out how to get unit testing to work when this is private
 	Map<String, Map<Integer, Map<Integer,wUStatus>>> unitsOnServer;
@@ -122,9 +126,22 @@ public class Initializer {
 			workUnitMarshaller = context.createMarshaller();
 			workUnitMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
 			sqsClient = new AmazonSQSClient(this.credentials);
-			dispatchQueue = createQueue(sqsClient, Constants.dispatchQueueName);
-			returnQueue = createQueue(sqsClient, Constants.returnQueueName);
 			unitsOnServer= createUnitsOnServer();
+			try{
+				dispatchQueue = createQueue(sqsClient, Constants.dispatchQueueName);
+				returnQueue = createQueue(sqsClient, Constants.returnQueueName);
+			}catch (AmazonServiceException ase2){ //IFF it is too recently after the queue was last deleted wait 60sec and retry.
+				if(ase2.getErrorCode().equals("AWS.SimpleQueueService.QueueDeletedRecently")){
+					logger.info("Waiting 60s to respawn SQS queues");
+					System.out.println("Waiting 60 to respawn SQS queues");
+					Thread.sleep(60000);
+					dispatchQueue = createQueue(sqsClient, Constants.dispatchQueueName);
+					returnQueue = createQueue(sqsClient, Constants.returnQueueName);
+				}else{
+					throw ase2;
+				}
+
+			}
 			//createInstances(new AmazonEC2Client(this.credentials), Constants.initialInstances);
 		}
 		catch (AmazonServiceException ase) {
@@ -166,7 +183,7 @@ public class Initializer {
 		gridManager.start();
 
 	}
-	
+
 	/*@deprecated
 	 * this is to be replaced with the more versatile createInstances
 	 */
@@ -198,7 +215,7 @@ public class Initializer {
 			ec2.createTags(createTagsRequest);
 		}
 	}
-	
+
 
 	/*
 	 * @param ec2: an ec2 client
@@ -207,24 +224,24 @@ public class Initializer {
 	 */
 	void createSpotInstances(AmazonEC2Client ec2, Integer instancesIn) throws Exception{
 		//set the zone
-				ec2.setEndpoint(Constants.ec2Region);
-				System.out.println("Intializing "+instancesIn+" instances\n");
-				//create EC2 instances
-				RequestSpotInstancesRequest requestSpotRequest = new RequestSpotInstancesRequest()
-				.withSpotPrice(Constants.spotPrice)
-				.withLaunchSpecification(
-						new LaunchSpecification()
-						.withImageId(Constants.imageID)
-						.withSecurityGroups(Constants.securityGroupID)
-						.withKeyName(Constants.keyName)
-						.withInstanceType(Constants.instanceType))
+		ec2.setEndpoint(Constants.ec2Region);
+		System.out.println("Intializing "+instancesIn+" instances\n");
+		//create EC2 instances
+		RequestSpotInstancesRequest requestSpotRequest = new RequestSpotInstancesRequest()
+		.withSpotPrice(Constants.spotPrice)
+		.withLaunchSpecification(
+				new LaunchSpecification()
+				.withImageId(Constants.imageID)
+				.withSecurityGroups(Constants.securityGroupID)
+				.withKeyName(Constants.keyName)
+				.withInstanceType(Constants.instanceType))
 				.withInstanceCount(instancesIn);
-				RequestSpotInstancesResult runInstances = ec2.requestSpotInstances(requestSpotRequest);
-				System.out.println(runInstances.toString());
+		RequestSpotInstancesResult runInstances = ec2.requestSpotInstances(requestSpotRequest);
+		System.out.println(runInstances.toString());
 
 
 	}
-	
+
 	/*
 	 * @param ec2: an ec2 client
 	 * @param instancesIn: the number of instances to create
@@ -279,7 +296,7 @@ public class Initializer {
 	}
 
 	/**
-	 * 
+	 * Shutdown all associated AWS resources
 	 */
 	public void teardownAll(){
 		this.shuttingDown=true;
@@ -330,8 +347,8 @@ public class Initializer {
 
 		System.out.println("Killed all cumulus drones");
 		//clearing results from database  TODO reevaluate the usefulness of this at release time
-		
-		String query="DELETE FROM cumulus.results;";
+
+		/*String query="DELETE FROM cumulus.results;";
 		Statement stmt = null;
 		try {
 			Connection conn= PooledConnectionFactory.INSTANCE.getCumulusConnection();
@@ -343,7 +360,7 @@ public class Initializer {
 			System.out.println("Couldn't delete un-returned results");
 			e.printStackTrace();
 		}
-		
+		 */
 	}
 
 	/**
@@ -398,14 +415,36 @@ public class Initializer {
 
 	/**
 	 * Returns the max numbered jobID for a userID
+	 * checks the maxId in the database.  Then the maxId in the local store.  This catches any jobs that have been dispatched by not returned
+	 * any results to the database yet.
 	 * @param userID
 	 * @return max jobID
 	 */
 	public synchronized Integer getMaxJobID(String userID){
+		Integer maxId=0;
+		Integer maxId2=0;
+		String query="SELECT max(job_id) FROM cumulus.results WHERE cumulus.results.owner_id=\""+userID+"\";";
+		try {
+			Statement stmt = PooledConnectionFactory.INSTANCE.getCumulusConnection().createStatement();
+			ResultSet results= stmt.executeQuery(query);
+			if (results.next()){
+				//if the receptor is not in the database (with the right ownership)
+				maxId= results.getInt(1);
+			}
+		} catch (SQLException e) {
+			logger.error(e);
+			e.printStackTrace();
+		}
+		logger.warn("couldn't find jobs in database checking against jobs on server");
 		if(this.unitsOnServer.get(userID)!=null&& this.unitsOnServer.get(userID).keySet().size()>0){
-			return Collections.max(this.unitsOnServer.get(userID).keySet());
+			maxId2= Collections.max(this.unitsOnServer.get(userID).keySet());
 		}else{
-			return 0;
+			maxId2= 0;
+		}
+		if (maxId2>maxId){
+			return maxId2;
+		}else{
+			return maxId;
 		}
 	}
 

@@ -6,6 +6,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.junit.Test;
+
 public class JaxBobjectsTest {
 
 	/**
@@ -14,7 +16,8 @@ public class JaxBobjectsTest {
 	 */
 	private static final String TEST_XML= "./text.xml";
 	
-	public static void main(String[] args) {
+	@Test
+	public void JaxBobjectsTest() {
 		VinaParams params = new VinaParams();
 		params.setCenterX(0);
 		params.setCenterY(3);

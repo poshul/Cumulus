@@ -115,7 +115,6 @@ public class DoAddNewCompoundHandler implements RestHandler {
 					con.rollback(); //this stupidly complex series of try catch blocks prevents leaving the database in an inconsistant state
 					con.setAutoCommit(true);
 				} catch (SQLException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace(System.err);
 					String error="Couldn't add compound to database.  Please contact an administrator before trying again.";
 					response.setStatus(500);
