@@ -10,10 +10,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.btechconsulting.wein.cumulus.model.ReturnUnit;

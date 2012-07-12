@@ -1,21 +1,16 @@
 package com.btechconsulting.wein.cumulus.initialization;
 
-import static org.junit.Assert.*;
-
-import java.text.DateFormat;
 import java.util.Date;
 
 import org.junit.Test;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.AmazonEC2Client;
-import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.DescribeSpotInstanceRequestsRequest;
 import com.amazonaws.services.ec2.model.DescribeSpotInstanceRequestsResult;
 import com.amazonaws.services.ec2.model.DescribeSpotPriceHistoryRequest;
 import com.amazonaws.services.ec2.model.DescribeSpotPriceHistoryResult;
 import com.amazonaws.services.ec2.model.Filter;
-import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.SpotInstanceRequest;
 
 public class SpotPriceTest {

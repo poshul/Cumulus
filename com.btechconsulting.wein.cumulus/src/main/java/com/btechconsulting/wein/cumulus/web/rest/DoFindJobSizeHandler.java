@@ -21,9 +21,7 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.btechconsulting.wein.cumulus.CreateShortReturn;
 import com.btechconsulting.wein.cumulus.model.FilterParams;
-import com.btechconsulting.wein.cumulus.model.VinaParams;
 import com.btechconsulting.wein.cumulus.workUnitGenerator.DetermineWorkToDo;
-import com.btechconsulting.wein.cumulus.workUnitGenerator.WorkUnitGenerator;
 
 /**
  * @author samuel

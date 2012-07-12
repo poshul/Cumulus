@@ -3,8 +3,6 @@
  */
 package com.btechconsulting.wein.cumulus;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 import com.btechconsulting.wein.cumulus.model.NewCompound;

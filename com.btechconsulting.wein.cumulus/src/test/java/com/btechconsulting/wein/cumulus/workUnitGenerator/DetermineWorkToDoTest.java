@@ -1,6 +1,6 @@
 package com.btechconsulting.wein.cumulus.workUnitGenerator;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -8,7 +8,6 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Test;
 
-import com.btechconsulting.wein.cumulus.initialization.Initializer;
 import com.btechconsulting.wein.cumulus.model.FilterParams;
 
 public class DetermineWorkToDoTest {

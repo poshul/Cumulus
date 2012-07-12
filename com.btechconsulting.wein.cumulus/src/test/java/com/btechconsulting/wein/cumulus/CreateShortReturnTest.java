@@ -1,7 +1,5 @@
 package com.btechconsulting.wein.cumulus;
 
-import static org.junit.Assert.*;
-
 import javax.servlet.ServletException;
 
 import org.junit.Test;

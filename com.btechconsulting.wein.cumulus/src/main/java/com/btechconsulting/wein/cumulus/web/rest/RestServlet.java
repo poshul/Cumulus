@@ -4,16 +4,15 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
 
-import org.apache.bcel.generic.NEW;
-import org.apache.log4j.Logger; 
-
-import com.btechconsulting.wein.cumulus.initialization.Initializer;
-
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.log4j.Logger;
+
+import com.btechconsulting.wein.cumulus.initialization.Initializer;
 
 /**
  * 

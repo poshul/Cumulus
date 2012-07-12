@@ -1,10 +1,7 @@
 package com.btechconsulting.wein.cumulus.model;
 
-import java.io.FileReader;
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 
 public class NewMolculeObjectsTest {
 

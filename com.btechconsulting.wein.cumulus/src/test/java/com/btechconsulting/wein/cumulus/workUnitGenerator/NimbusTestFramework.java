@@ -12,9 +12,9 @@ import javax.xml.bind.JAXBException;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.btechconsulting.wein.cumulus.initialization.Initializer;
+import com.btechconsulting.wein.cumulus.model.FilterParams;
 import com.btechconsulting.wein.cumulus.model.VinaParams;
 import com.btechconsulting.wein.cumulus.model.WorkUnit;
-import com.btechconsulting.wein.cumulus.model.FilterParams;
 
 public class NimbusTestFramework {
 

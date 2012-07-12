@@ -10,8 +10,6 @@ package com.btechconsulting.wein.cumulus.model;
 
 import javax.xml.bind.annotation.XmlRegistry;
 
-import com.btechconsulting.wein.cumulus.model.NewCompound;
-
 /**
  * This object contains factory methods for each 
  * Java content interface and Java element interface 

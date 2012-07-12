@@ -1,7 +1,5 @@
 package com.btechconsulting.wein.cumulus.initialization;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 import com.amazonaws.services.ec2.AmazonEC2Client;
