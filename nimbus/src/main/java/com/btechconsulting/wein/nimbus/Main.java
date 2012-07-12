@@ -259,7 +259,8 @@ public class Main {
 				}
 				if (numResults==0){
 					//get receptor and molecule from sql
-					String receptorQuery= "SELECT pdbqtfile FROM cumulus.receptor WHERE sha256='"+unMarshalledUnit.getPointerToReceptor()+"' AND( owner_id='"+unMarshalledUnit.getOwnerID()+"';";//+"OR owner_id='0');";
+					String receptorQuery= "SELECT pdbqtfile FROM cumulus.receptor WHERE sha256='"+unMarshalledUnit.getPointerToReceptor()+"' AND( owner_id='"+unMarshalledUnit.getOwnerID()+"');";//+"OR owner_id='0');";
+					System.out.println(receptorQuery);
 					String moleculeQuery= "SELECT pdbqt FROM cumulus.mol_properties WHERE compound_id='"+unMarshalledUnit.getPointerToMolecule()+"' AND( owner_id='"+unMarshalledUnit.getOwnerID()+"' "+"OR owner_id='0');";
 					//logger.info(moleculeQuery);
 					String receptorString=null;
