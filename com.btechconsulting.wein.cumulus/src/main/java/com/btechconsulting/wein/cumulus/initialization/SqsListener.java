@@ -40,11 +40,12 @@ class SqsListener implements Runnable {
 		catch (JAXBException jbe){
 			//This exception is bad, and should result in the system terminating, as cleanly as possible
 			logger.error("Cannot create unmarshaller for return queue");
-			papa.teardownAll();
+			papa.nonDestructiveShutdown();
 			System.exit(1);
 		}
 
 		while (true){
+			//System.out.println(papa.getReturnQueue());//FIXME
 			ReceiveMessageRequest request= new ReceiveMessageRequest(papa.getReturnQueue()).withMaxNumberOfMessages(10);
 			List<Message> results =sqsClient.receiveMessage(request).getMessages();
 			List<DeleteMessageBatchRequestEntry> deleteList=new ArrayList<DeleteMessageBatchRequestEntry>();

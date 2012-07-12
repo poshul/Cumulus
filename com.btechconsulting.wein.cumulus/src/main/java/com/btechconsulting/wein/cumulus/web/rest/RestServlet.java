@@ -78,7 +78,7 @@ public class RestServlet extends HttpServlet{
 	 */
 	@Override
 	public void destroy() {
-		Initializer.getInstance(getServletContext()).teardownAll();
+		Initializer.getInstance(getServletContext()).nonDestructiveShutdown();
 		System.err.println("Shutting down");
 		super.destroy();
 	}

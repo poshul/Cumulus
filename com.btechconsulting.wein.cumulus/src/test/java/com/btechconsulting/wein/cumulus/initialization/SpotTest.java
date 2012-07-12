@@ -11,7 +11,7 @@ public class SpotTest {
 	@Test
 	public void testCreateSpotInstances() throws Exception {
 		AmazonEC2Client ec2Client= new AmazonEC2Client(Initializer.getInstance().getCredentials());
-		Initializer.getInstance().createSpotInstances(ec2Client, 5);
+		Initializer.getInstance().createSpotInstances(ec2Client, 1);
 	}
 
 }

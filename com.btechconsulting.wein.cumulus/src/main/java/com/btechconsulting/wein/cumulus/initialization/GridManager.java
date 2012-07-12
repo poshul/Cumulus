@@ -4,6 +4,7 @@ import java.util.Date;
 
 import org.apache.log4j.Logger;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
@@ -50,6 +51,9 @@ public class GridManager implements Runnable {
 				System.err.println("Reponse Status Code: " + e.getStatusCode());
 				System.err.println("Error Code: " + e.getErrorCode());
 				System.err.println("Request ID: " + e.getRequestId());
+			} catch (AmazonClientException e){
+				logger.warn(e);
+				continue; //if the error is due to being unable to connect to sqs it is likely transient, and we should keep going until SQS comes back
 			} catch (Exception e) {
 				//caught another exception
 				System.err.println(e);
@@ -57,6 +61,7 @@ public class GridManager implements Runnable {
 				//System.exit(1);
 			}
 			if (sqsResult==null){
+				System.err.println("Couldn't get the number of items in the queue reverting to static functioning");
 				logger.error("Couldn't get the number of items in the queue reverting to static functioning");
 				break;
 			}
@@ -68,6 +73,7 @@ public class GridManager implements Runnable {
 			logger.debug("Getting list of active cumulus drones");
 			Integer numInstances=null;
 			Integer numSpotRequests=null;
+			Initializer.serialize("/tmp/dump.obj", papa.unitsOnServer); //TODO test this.
 			//check number of open spot requests
 			DescribeSpotInstanceRequestsRequest describeSpotInstancesRequest= new DescribeSpotInstanceRequestsRequest();
 			describeSpotInstancesRequest.withFilters(new Filter("state").withValues("open"));

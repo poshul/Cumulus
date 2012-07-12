@@ -1,8 +1,19 @@
 package com.btechconsulting.wein.cumulus.initialization;
 
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -45,7 +56,9 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.DeleteQueueRequest;
+import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
 import com.btechconsulting.wein.cumulus.model.WorkUnit;
+import com.btechconsulting.wein.cumulus.model.copy.NewCompound;
 import com.btechconsulting.wein.cumulus.workUnitGenerator.DetermineWorkToDo;
 
 /**
@@ -77,12 +90,14 @@ public class Initializer {
 	public static Initializer getInstance(ServletContext servletContext){
 		//System.out.println(instance);
 		if (instance==null){
-			instance = new Initializer(servletContext);
+			instance = new Initializer(servletContext,Constants.DUMPFILELOC);
+			//instance = new Initializer(servletContext);
 		}
 		return instance;
 	}
 
 	//this is a compatability method
+	@Deprecated
 	public static Initializer getInstance(){
 		if (instance==null){
 			instance= new Initializer(null);
@@ -91,36 +106,62 @@ public class Initializer {
 		return instance;
 	}
 
+	/*
+	 * Overloaded version of the initializer that reads in a dumped set of unitsOnServer and restarts server 
+	 */
+	private Initializer(ServletContext servletContext, String dumpFileLoc){
+		try{
+			readCredentials(servletContext);
+			JAXBContext context = JAXBContext.newInstance(WorkUnit.class);
+			workUnitMarshaller = context.createMarshaller();
+			workUnitMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+			sqsClient = new AmazonSQSClient(this.credentials);
+		}
+		catch (Exception e){
+			System.err.println(e);
+		}
+		try{
+			try{
+				dispatchQueue = createQueue(sqsClient, Constants.dispatchQueueName);
+				returnQueue = createQueue(sqsClient, Constants.returnQueueName);
+			}catch (AmazonServiceException ase2){ //IFF it is too recently after the queue was last deleted wait 60sec and retry.
+				if(ase2.getErrorCode().equals("AWS.SimpleQueueService.QueueDeletedRecently")){
+					logger.info("Waiting 60s to respawn SQS queues");
+					System.out.println("Waiting 60 to respawn SQS queues");
+					Thread.sleep(60000);
+					dispatchQueue = createQueue(sqsClient, Constants.dispatchQueueName);
+					returnQueue = createQueue(sqsClient, Constants.returnQueueName);
+				}else{
+					throw ase2;
+				}
+			}
+		}catch (Exception e) {
+			// TODO: handle exception
+		}
+		//start the SQSListener
+		sqsListener = new Thread(new SqsListener(this));
+		sqsListener.setName("sqsListener");
+		sqsListener.start();		
+		//start the gridManager
+		gridManager = new Thread(new GridManager(this));
+		gridManager.setName("gridManager");
+		gridManager.start();
+
+		try{
+			unitsOnServer=deSerialize(dumpFileLoc);
+			System.out.println("Loaded previous session");
+
+		}catch (IOException e) {
+			logger.warn("Couldn't load previous session, creating new session.");
+			System.err.println("Couldn't load previous session, creating new session.");
+			unitsOnServer=createUnitsOnServer();
+		}
+	}
 
 
 	private Initializer(ServletContext servletContext){
 		try{
-			//we read credentials once here.  Minimizing reads to the disk
-			FileInputStream creds= null;
-			System.out.println(servletContext);
-			if (servletContext==null){// if we are not being run off a servlet
-				creds= new FileInputStream(Constants.credentialsFile);
-				credentials = new PropertiesCredentials(creds);
-			}else{// if we are running as a servlet get the credentials location from the servletConfig
-				try{
-					String credsName= (String) servletContext.getAttribute("creds");
-					URL url= servletContext.getResource(credsName);//get the creds file location from the servlet
-					if (url== null){
-						url = getClass().getResource(credsName);
-					}
-
-					if (url == null) {
-						System.err.println("No configuration found for RestServlet: " + credsName);
-						throw new ServletException("No configuration found for RestSearchAction: " + credsName);
-					}
-					credentials=new PropertiesCredentials(url.openStream());
-
-				}
-				catch (IOException ioe) {
-					System.err.println(ioe.getMessage());
-					throw new ServletException("Error during Cumulus initialization: " + ioe.getMessage(), ioe);
-				}
-			}
+			readCredentials(servletContext);
 			//credentials=new PropertiesCredentials(creds);
 			JAXBContext context = JAXBContext.newInstance(WorkUnit.class);
 			workUnitMarshaller = context.createMarshaller();
@@ -182,6 +223,43 @@ public class Initializer {
 		gridManager.setName("gridManager");
 		gridManager.start();
 
+	}
+
+	/**
+	 * Read AWS credentials in from a file
+	 * @param servletContext
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 * @throws ServletException
+	 */
+	private void readCredentials(ServletContext servletContext)
+			throws FileNotFoundException, IOException, ServletException {
+		//we read credentials once here.  Minimizing reads to the disk
+		FileInputStream creds= null;
+		System.out.println(servletContext);
+		if (servletContext==null){// if we are not being run off a servlet
+			creds= new FileInputStream(Constants.credentialsFile);
+			credentials = new PropertiesCredentials(creds);
+		}else{// if we are running as a servlet get the credentials location from the servletConfig
+			try{
+				String credsName= (String) servletContext.getAttribute("creds");
+				URL url= servletContext.getResource(credsName);//get the creds file location from the servlet
+				if (url== null){
+					url = getClass().getResource(credsName);
+				}
+
+				if (url == null) {
+					System.err.println("No configuration found for RestServlet: " + credsName);
+					throw new ServletException("No configuration found for RestSearchAction: " + credsName);
+				}
+				credentials=new PropertiesCredentials(url.openStream());
+
+			}
+			catch (IOException ioe) {
+				System.err.println(ioe.getMessage());
+				throw new ServletException("Error during Cumulus initialization: " + ioe.getMessage(), ioe);
+			}
+		}
 	}
 
 	/*@deprecated
@@ -295,6 +373,19 @@ public class Initializer {
 		return myQueueUrl;
 	}
 
+
+	/**
+	 * Shutdown Cumulus without destroying resources.
+	 */
+	public void nonDestructiveShutdown(){
+		this.shuttingDown=true;
+		this.sqsListener.interrupt();
+		this.gridManager.interrupt();
+		serialize(Constants.DUMPFILELOC, unitsOnServer);
+		System.out.println("Closed threads and saved server state");
+	}
+
+
 	/**
 	 * Shutdown all associated AWS resources
 	 */
@@ -362,6 +453,50 @@ public class Initializer {
 		}
 		 */
 	}
+
+	/**
+	 * A function to serialize serializable objects to the disk
+	 * @param location where to store the serialized object
+	 * @param object the object to serialize
+	 */
+	public static <T> void serialize(String location,T object){
+		try{
+			//use buffering
+			OutputStream file = new FileOutputStream(location);
+			OutputStream buffer = new BufferedOutputStream( file );
+			ObjectOutput output = new ObjectOutputStream( buffer );
+			try{
+				output.writeObject(object);
+			}
+			finally{
+				output.close();
+			}
+		}  
+		catch(IOException ex){
+			System.out.println("Cannot write object out");
+			ex.printStackTrace();
+		}
+	}
+
+	public static <T> T deSerialize(String location) throws IOException{
+		try{
+			//use buffering
+			InputStream file = new FileInputStream(location);
+			InputStream buffer = new BufferedInputStream( file );
+			ObjectInput input = new ObjectInputStream ( buffer );
+			//deserialize the List
+			T recoveredObject = (T)input.readObject();
+			//display its data
+			input.close();
+			return recoveredObject;
+		}
+		catch(ClassNotFoundException ex){
+			System.err.println("Cannot perform input. Class not found.");
+			System.exit(1);
+		}
+		return null;//This is sloppy but it should never be reached.
+	}
+
 
 	/**
 	 * putJobOnServer: add a complete job (jobID, Map<String, wUstatus>) to the server
