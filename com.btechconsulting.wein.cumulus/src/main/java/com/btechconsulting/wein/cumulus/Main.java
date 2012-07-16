@@ -8,6 +8,7 @@ import javax.xml.bind.JAXBException;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.btechconsulting.wein.cumulus.initialization.Initializer;
 import com.btechconsulting.wein.cumulus.model.FilterParams;
 import com.btechconsulting.wein.cumulus.model.VinaParams;
 import com.btechconsulting.wein.cumulus.workUnitGenerator.WorkUnitGenerator;
@@ -16,21 +17,8 @@ import com.btechconsulting.wein.cumulus.workUnitGenerator.WorkUnitGenerator;
 public class Main {
 
 	public static void main(String[] args) {
-		try {
-			WorkUnitGenerator.BuildJob("blah", "test", new VinaParams(), new FilterParams());
-		} catch (AmazonServiceException e) {
-			e.printStackTrace();
-		} catch (AmazonClientException e) {
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (JAXBException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		System.out.println("Cleaning up server");
+		Initializer.getInstance(null).teardownAll();
 	}
 
 	//This class is just a scratch pad

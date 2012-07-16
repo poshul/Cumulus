@@ -71,8 +71,8 @@ public class SqsListenerTest {
 	//delete the unit from the queue
 
 	//@After
-	public void tearDown() throws Exception{
+/*	public void tearDown() throws Exception{
 		Initializer.getInstance().teardownAll();
-	}
+	}*/
 
 }

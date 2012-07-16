@@ -24,15 +24,15 @@ public class InitializerTest {
 	/**
 	 * Test method for {@link com.btechconsulting.wein.cumulus.initialization.Initializer#teardownAll()}.
 	 */
-	@AfterClass
-	public static void testTeardownAll() {
+	//@AfterClass
+/*	public static void testTeardownAll() {
 		try {
 			Initializer.getInstance().teardownAll();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
-	}
+	}*/
 
 	/**
 	 * Test method for {@link com.btechconsulting.wein.cumulus.initialization.Initializer#putJobOnServer(java.lang.String, Integer, Map)}.

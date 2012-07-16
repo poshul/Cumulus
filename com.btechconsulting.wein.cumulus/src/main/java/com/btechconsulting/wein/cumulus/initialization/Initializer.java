@@ -3,6 +3,7 @@ package com.btechconsulting.wein.cumulus.initialization;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -14,6 +15,7 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -389,6 +391,12 @@ public class Initializer {
 		sqsClient.deleteQueue(new DeleteQueueRequest(dispatchQueue));
 		sqsClient.deleteQueue(new DeleteQueueRequest(returnQueue));
 		System.out.println("Deleted SQS queues");
+		boolean success = (new File(Constants.DUMPFILELOC)).delete();
+		if (success){
+			System.out.println("Deleted unitsOnServer");
+		} else{
+			System.err.println("Problem deleting unitsOnServer");
+		}
 		//We create a request to describe current instances with the imageID that Cumulus uses.
 		DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest();
 		describeInstancesRequest.withFilters(new Filter("image-id").withValues(Constants.imageID));
@@ -432,7 +440,7 @@ public class Initializer {
 		System.out.println("Killed all cumulus drones");
 		//clearing results from database  TODO reevaluate the usefulness of this at release time
 
-		/*String query="DELETE FROM cumulus.results;";
+/*		String query="DELETE FROM cumulus.results;";
 		Statement stmt = null;
 		try {
 			Connection conn= PooledConnectionFactory.INSTANCE.getCumulusConnection();
@@ -443,8 +451,8 @@ public class Initializer {
 		} catch (SQLException e) {
 			System.out.println("Couldn't delete un-returned results");
 			e.printStackTrace();
-		}
-		 */
+		}*/
+		 
 	}
 
 	/**
