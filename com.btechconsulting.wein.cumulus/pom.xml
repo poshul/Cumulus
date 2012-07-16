@@ -10,16 +10,6 @@
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
-<!-- 			<exclusions>
-				<exclusion>
-					<artifactId>jmxri</artifactId>
-					<groupId>com.sun.jmx</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>jmxtools</artifactId>
-					<groupId>com.sun.jdmk</groupId>
-				</exclusion>
-			</exclusions> -->
 		</dependency>
 		<dependency>
 			<groupId>javax.jms</groupId>
@@ -47,16 +37,6 @@
 			<artifactId>jdbc</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.mysql</groupId>
-			<artifactId>management</artifactId>
-<!-- 			<exclusions>
-				<exclusion>
-					<artifactId>jmxtools</artifactId>
-					<groupId>com.sun.jdmk</groupId>
-				</exclusion>
-			</exclusions> -->
-		</dependency>
-		<dependency>
 			<groupId>com.sun.jersey</groupId>
 			<artifactId>jersey</artifactId>
 		</dependency>
@@ -77,13 +57,17 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
 				<groupId>log4j</groupId>
 				<artifactId>log4j</artifactId>
-				<version>1.2.15</version>
+				<version>1.2.16</version>
 			</dependency>
 			<dependency>
 				<groupId>javax.jms</groupId>
@@ -109,11 +93,6 @@
 				<groupId>jdbc</groupId>
 				<artifactId>jdbc</artifactId>
 				<version>2.0</version>
-			</dependency>
-			<dependency>
-				<groupId>com.mysql</groupId>
-				<artifactId>management</artifactId>
-				<version>5-0-2-beta</version>
 			</dependency>
 			<dependency>
 				<groupId>com.sun.jersey</groupId>
@@ -144,6 +123,11 @@
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
 				<version>4.10</version>
+			</dependency>
+			<dependency>
+				<groupId>mysql</groupId>
+				<artifactId>mysql-connector-java</artifactId>
+				<version>5.1.21</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
