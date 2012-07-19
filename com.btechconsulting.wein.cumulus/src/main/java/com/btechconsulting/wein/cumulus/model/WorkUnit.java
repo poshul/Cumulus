@@ -63,6 +63,20 @@ public class WorkUnit {
     protected Integer workUnitID;
     @XmlElement(required = true)
     protected VinaParams vinaParams;
+    
+    @Override public boolean equals(Object other){
+    	boolean result = false;
+    	if (other instanceof WorkUnit){
+    		WorkUnit that = (WorkUnit) other;
+    		result= (this.getPointerToMolecule().equals(that.getPointerToMolecule())&& this.getPointerToReceptor().equals(that.getPointerToReceptor())&& this.getJobID().equals(that.getJobID())
+    				&& this.getOwnerID().equals(that.getOwnerID())&& this.getVinaParams().equals(that.getVinaParams())&& this.getWorkUnitID().equals(that.getWorkUnitID()));
+    	}
+    	return result;
+    }
+    
+    @Override public int hashCode(){
+    	return (jobID*workUnitID);
+    }
 
     /**
      * Gets the value of the pointerToMolecule property.

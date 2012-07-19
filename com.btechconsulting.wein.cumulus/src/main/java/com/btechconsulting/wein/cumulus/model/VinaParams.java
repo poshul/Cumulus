@@ -77,6 +77,25 @@ public class VinaParams {
     protected Integer numModes;
     @XmlElement(name = "energy_range")
     protected Integer energyRange;
+    
+    
+    @Override public boolean equals(Object other){
+    	boolean result = false;
+    	if (other instanceof VinaParams){
+    		VinaParams that = (VinaParams) other;
+    		result= (this.getCenterX()==that.getCenterX()&& this.getCenterY()==that.getCenterY()&& this.getCenterZ()==that.getCenterZ()
+    				&& this.getSizeX()==that.getSizeX()&& this.getSizeY()==that.getSizeY()&& this.getSizeZ()==that.getSizeZ()
+    				);
+    		/*&& this.getExhaustiveness().equals(that.getExhaustiveness())&& this.getSeed().equals(that.getSeed())
+    				&& this.getNumModes().equals(that.getNumModes())&& this.getEnergyRange().equals(that.getEnergyRange())
+    				*/
+    	}
+    	return result;
+    }
+    
+    @Override public int hashCode(){
+    	return (this.sizeX+this.sizeY+this.sizeZ);
+    }
 
     /**
      * Gets the value of the centerX property.

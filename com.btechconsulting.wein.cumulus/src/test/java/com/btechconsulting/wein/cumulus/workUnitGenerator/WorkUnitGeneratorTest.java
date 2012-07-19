@@ -14,6 +14,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import org.junit.Test;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.PropertiesCredentials;
@@ -29,15 +31,15 @@ import com.btechconsulting.wein.cumulus.model.WorkUnit;
 
 /**
  * @author samuel
+ * 
  *
  */
 public class WorkUnitGeneratorTest {
 
-	
 	/**
 	 * Test method for {@link com.btechconsulting.wein.cumulus.workUnitGenerator.WorkUnitGenerator#BuildWorkUnit(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, com.btechconsulting.wein.cumulus.model.VinaParams)}.
 	 */
-	//@Test
+	@Test
 	public void testBuildWorkUnit() {
 		WorkUnit myWorkUnit= new WorkUnit();
 		WorkUnit testWorkUnit= new WorkUnit();
@@ -62,14 +64,13 @@ public class WorkUnitGeneratorTest {
 		testWorkUnit.setVinaParams(params);
 		testWorkUnit.setWorkUnitID(workUnitId);
 		myWorkUnit = WorkUnitGenerator.BuildWorkUnit(receptor,molecule,ownerId,jobId,workUnitId, params);
-		assert(testWorkUnit.equals(myWorkUnit)); //TODO check that equality works.
-
+		assert(testWorkUnit.equals(myWorkUnit));
 	}
 
 	/**
 	 * Test method for {@link com.btechconsulting.wein.cumulus.workUnitGenerator.WorkUnitGenerator#putWorkUnitInSQSBatch(com.btechconsulting.wein.cumulus.model.WorkUnit)}.
 	 */
-	//@Test
+	//@Test  //TODO fix test
 	public void testPutWorkUnitInSQS() throws Exception{
 		//manually generate workunit
 		WorkUnit testWorkUnit= new WorkUnit();
@@ -94,20 +95,20 @@ public class WorkUnitGeneratorTest {
 		testWorkUnit.setVinaParams(params);
 		testWorkUnit.setWorkUnitID(workUnitId);
 		WorkUnitGenerator.putWorkUnitInSQSBatch(testWorkUnit);
-		AmazonSQS sqsClient = new AmazonSQSClient(Initializer.getInstance().getCredentials());
-		ReceiveMessageRequest messageRequest= new ReceiveMessageRequest(Initializer.getInstance().getDispatchQueue());
-		 List<Message> messages= sqsClient.receiveMessage(messageRequest).getMessages();
-		 for (Message message : messages) {
-				//test unmarshalling of the message
-				JAXBContext context= JAXBContext.newInstance(WorkUnit.class);
-				Unmarshaller um = context.createUnmarshaller();
-				WorkUnit umWorkUnit=(WorkUnit) um.unmarshal(new StringReader(message.getBody()));
-				System.out.println(umWorkUnit.getPointerToMolecule());
-				assert (umWorkUnit.equals(testWorkUnit)); //test that we have marshalled and unmarshalled properly
-		 }
+		AmazonSQS sqsClient = new AmazonSQSClient(Initializer.getInstance(null).getCredentials()); //TODO fix creds loc
+		ReceiveMessageRequest messageRequest= new ReceiveMessageRequest(Initializer.getInstance(null).getDispatchQueue()); //TODO fix queue loc
+		List<Message> messages= sqsClient.receiveMessage(messageRequest).getMessages();
+		for (Message message : messages) {
+			//test unmarshalling of the message
+			JAXBContext context= JAXBContext.newInstance(WorkUnit.class);
+			Unmarshaller um = context.createUnmarshaller();
+			WorkUnit umWorkUnit=(WorkUnit) um.unmarshal(new StringReader(message.getBody()));
+			System.out.println(umWorkUnit.getPointerToMolecule());
+			assert (umWorkUnit.equals(testWorkUnit)); //test that we have marshalled and unmarshalled properly
+		}
 	}
-	
-	//@Test
+
+	//@Test //TODO fix test  this is likely the one that is broken.
 	public void testBuildJob() throws AmazonServiceException, AmazonClientException, FileNotFoundException, SQLException, JAXBException, IOException{
 		FilterParams filter= new FilterParams();
 		filter.setMaxNrb(0);
@@ -118,10 +119,10 @@ public class WorkUnitGeneratorTest {
 		params.setSizeX(2);
 		params.setSizeY(5);
 		params.setSizeZ(5);
-		WorkUnitGenerator.BuildJob("blah", "0", params, filter);
+		WorkUnitGenerator.BuildJob("blah", "0", params, filter); //TODO overload BuildJob so that we can specify a non standard SQS location
 	}
-	
-	//@Test
+
+	//@Test //TODO fix test
 	public void TestPutWorkOnServer() throws AmazonServiceException, InternalError, AmazonClientException, FileNotFoundException, JAXBException, IOException{
 		//manually generate workunit
 		WorkUnit testWorkUnit= new WorkUnit();
@@ -145,22 +146,22 @@ public class WorkUnitGeneratorTest {
 		testWorkUnit.setPointerToReceptor(receptor);
 		testWorkUnit.setVinaParams(params);
 		testWorkUnit.setWorkUnitID(workUnitId);
-		WorkUnitGenerator.PutWorkUnitOnServer(testWorkUnit);
+		WorkUnitGenerator.PutWorkUnitOnServer(testWorkUnit);//TODO overload PutWorkUnitOnServer to accept different queue locations
 		AmazonSQS sqsClient = new AmazonSQSClient(new PropertiesCredentials(
 				new FileInputStream(Constants.credentialsFile)));
-		ReceiveMessageRequest messageRequest= new ReceiveMessageRequest(Initializer.getInstance().getDispatchQueue());
-		 List<Message> messages= sqsClient.receiveMessage(messageRequest).getMessages();
-		 for (Message message : messages) {
-				//test unmarshalling of the message
-				JAXBContext context= JAXBContext.newInstance(WorkUnit.class);
-				Unmarshaller um = context.createUnmarshaller();
-				WorkUnit umWorkUnit=(WorkUnit) um.unmarshal(new StringReader(message.getBody()));
-				System.out.println(umWorkUnit.getPointerToMolecule());
-				assert (umWorkUnit.equals(testWorkUnit)); //test that we have marshalled and unmarshalled properly
-		 }
+		ReceiveMessageRequest messageRequest= new ReceiveMessageRequest(Initializer.getInstance(null).getDispatchQueue());//TODO fix sqs loc
+		List<Message> messages= sqsClient.receiveMessage(messageRequest).getMessages();
+		for (Message message : messages) {
+			//test unmarshalling of the message
+			JAXBContext context= JAXBContext.newInstance(WorkUnit.class);
+			Unmarshaller um = context.createUnmarshaller();
+			WorkUnit umWorkUnit=(WorkUnit) um.unmarshal(new StringReader(message.getBody()));
+			System.out.println(umWorkUnit.getPointerToMolecule());
+			assert (umWorkUnit.equals(testWorkUnit)); //test that we have marshalled and unmarshalled properly
+		}
 	}
 
-/*	@After
+	/*	@After
 	public void tearDown() throws Exception {
 		Initializer.getInstance().teardownAll();
 	}*/

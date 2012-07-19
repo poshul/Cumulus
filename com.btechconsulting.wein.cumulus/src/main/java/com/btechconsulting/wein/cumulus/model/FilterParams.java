@@ -125,7 +125,7 @@ public class FilterParams {
     public FilterParams(){
     	//these default parameters are derived from the ZINC clean-leads data-set.
     	this.minMwt=(float) 150;
-    	this.maxMwt=(float) 350;
+    	this.maxMwt=(float) 150;
     	this.minLogp=(float) -5.75;
     	this.maxLogp=(float) 3.5;
     	this.minDesolvApolar= (float) -20;

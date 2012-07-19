@@ -11,13 +11,12 @@ import com.amazonaws.services.ec2.model.DescribeSpotInstanceRequestsResult;
 import com.amazonaws.services.ec2.model.DescribeSpotPriceHistoryRequest;
 import com.amazonaws.services.ec2.model.DescribeSpotPriceHistoryResult;
 import com.amazonaws.services.ec2.model.Filter;
-import com.amazonaws.services.ec2.model.SpotInstanceRequest;
 
 public class SpotPriceTest {
 
 	@Test
 	public void testCreateSpotInstances() throws Exception {
-		AmazonEC2Client ec2Client= new AmazonEC2Client(Initializer.getInstance().getCredentials());
+		AmazonEC2Client ec2Client= new AmazonEC2Client(Initializer.getInstance(null).getCredentials());//TODO fix creds location
 		DescribeSpotPriceHistoryRequest historyRequest= new DescribeSpotPriceHistoryRequest()
 		.withAvailabilityZone("us-east-1c")
 		.withInstanceTypes(Constants.instanceType)
@@ -29,7 +28,7 @@ public class SpotPriceTest {
 	
 	@Test
 	public void testCheckSpotInstances() throws Exception {
-		AmazonEC2Client ec2Client= new AmazonEC2Client(Initializer.getInstance().getCredentials());
+		AmazonEC2Client ec2Client= new AmazonEC2Client(Initializer.getInstance(null).getCredentials()); //TODO fix creds location
 		DescribeSpotInstanceRequestsRequest describeSpotInstancesRequest= new DescribeSpotInstanceRequestsRequest();
 		describeSpotInstancesRequest.withFilters(new Filter("state").withValues("open"));
 		Integer numSpotRequests=0;
@@ -39,11 +38,12 @@ public class SpotPriceTest {
 			{
 				numSpotRequests=0;
 			}else {
-				Integer totalInstances=0;
+/*				Integer totalInstances=0;
 				for(SpotInstanceRequest i:describeSpotReservationsResult.getSpotInstanceRequests()){
 					totalInstances++;
-				}
-				numSpotRequests=totalInstances;
+				}*/
+				numSpotRequests=describeSpotReservationsResult.getSpotInstanceRequests().size();
+				//numSpotRequests=totalInstances;
 			}
 			//System.out.println("num instances="+numInstances);
 		} catch (AmazonServiceException e) {

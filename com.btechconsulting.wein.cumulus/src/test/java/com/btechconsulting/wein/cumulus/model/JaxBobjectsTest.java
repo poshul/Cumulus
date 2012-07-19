@@ -17,7 +17,7 @@ public class JaxBobjectsTest {
 	private static final String TEST_XML= "./text.xml";
 	
 	@Test
-	public void JaxBobjectsTest() {
+	public void JaxBobjectsTest1() {
 		VinaParams params = new VinaParams();
 		params.setCenterX(0);
 		params.setCenterY(3);

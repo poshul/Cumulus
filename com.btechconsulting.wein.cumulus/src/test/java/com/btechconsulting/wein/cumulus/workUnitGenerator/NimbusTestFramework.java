@@ -31,8 +31,8 @@ public class NimbusTestFramework {
 	 * @throws SQLException 
 	 */
 	public static void main(String[] args) throws AmazonServiceException, InternalError, AmazonClientException, FileNotFoundException, JAXBException, IOException, SQLException {
-		System.out.println(Initializer.getInstance().getDispatchQueue());
-		System.out.println(Initializer.getInstance().getReturnQueue());
+		System.out.println(Initializer.getInstance(null).getDispatchQueue());
+		System.out.println(Initializer.getInstance(null).getReturnQueue());
 		FilterParams filter=new FilterParams();
 		DetermineWorkToDo worktodo= new DetermineWorkToDo(getReceptor(), "0", filter);
 		String pointerToReceptor = worktodo.PutReceptorInDatabase();

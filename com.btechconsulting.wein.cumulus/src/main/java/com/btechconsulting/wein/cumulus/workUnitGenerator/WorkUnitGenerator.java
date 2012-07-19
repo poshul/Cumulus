@@ -50,11 +50,11 @@ public class WorkUnitGenerator {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public static Integer BuildJob(String receptor, String ownerID, VinaParams vinaParams, FilterParams filterParams) throws SQLException, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
+	public static Integer BuildJob(String receptor, String ownerID, VinaParams vinaParams, FilterParams filterParams, String dispatchQueueLoc) throws SQLException, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
 		//find the new JobID
-		Integer jobID= Initializer.getInstance().getMaxJobID(ownerID)+1;//our jobID is the NEXT integer
+		Integer jobID= Initializer.getInstance(null).getMaxJobID(ownerID)+1;//our jobID is the NEXT integer
 		//put an empty job on the server
-		Initializer.getInstance().putJobOnServer(ownerID, jobID, new HashMap<Integer,wUStatus>());
+		Initializer.getInstance(null).putJobOnServer(ownerID, jobID, new HashMap<Integer,wUStatus>());
 		DetermineWorkToDo jobWork= new DetermineWorkToDo(receptor, ownerID, filterParams);
 		String receptorID=jobWork.PutReceptorInDatabase();
 		List<String> compoundIDs=jobWork.FilterCompoundsInDatabase();
@@ -69,7 +69,7 @@ public class WorkUnitGenerator {
 			workUnitId++;
 			iter++;
 			if (iter>=10){
-				SendMessageBatchRequest request= new SendMessageBatchRequest(Initializer.getInstance().getDispatchQueue(), batch);
+				SendMessageBatchRequest request= new SendMessageBatchRequest(dispatchQueueLoc, batch);
 				//futures.add(Initializer.getInstance().getSqsClient().sendMessageBatchAsync(request));
 				Initializer.getInstance().getSqsClient().sendMessageBatch(request);
 				//System.out.println("batch sent");
@@ -98,7 +98,24 @@ public class WorkUnitGenerator {
 		//logger.debug("created "+workUnitId+" workunits");
 		return jobID;
 	}
-
+	
+	/**
+	 *  This is the old method for building a job, it assumes the default queue location.
+	 * @param receptor
+	 * @param ownerID
+	 * @param vinaParams
+	 * @param filterParams
+	 * @return
+	 * @throws SQLException
+	 * @throws AmazonServiceException
+	 * @throws JAXBException
+	 * @throws AmazonClientException
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public static Integer BuildJob(String receptor, String ownerID, VinaParams vinaParams, FilterParams filterParams) throws SQLException, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
+		return BuildJob(receptor, ownerID, vinaParams, filterParams, Initializer.getInstance(null).getDispatchQueue());
+	}
 
 
 	/**
@@ -125,7 +142,7 @@ public class WorkUnitGenerator {
 	public static SendMessageBatchRequestEntry putWorkUnitInSQSBatch(WorkUnit workunit) throws InternalError, AmazonServiceException, JAXBException, AmazonClientException, FileNotFoundException, IOException{
 		//do the marshalling
 		java.io.StringWriter sw = new StringWriter();
-		Marshaller m = Initializer.getInstance().getWorkUnitMarshaller();
+		Marshaller m = Initializer.getInstance(null).getWorkUnitMarshaller();
 		m.marshal(workunit, sw);
 		String marshalledUnit= sw.toString();
 		SendMessageBatchRequestEntry entry = new SendMessageBatchRequestEntry(workunit.getWorkUnitID().toString(),marshalledUnit);
