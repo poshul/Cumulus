@@ -131,6 +131,7 @@ public class Initializer {
 				}
 			}
 		}catch (Exception e) {
+			e.printStackTrace();
 			// TODO: handle exception
 		}
 		//start the SQSListener
@@ -359,7 +360,7 @@ public class Initializer {
 	 * @param credentialsFile the file containing credentials to access the AWS
 	 * @return AmazonSQS the queue
 	 */
-	private String createQueue(AmazonSQS client, String queueName) throws Exception {
+	public String createQueue(AmazonSQS client, String queueName) throws Exception {
 		// Create a queue
 		System.out.println("Creating a new SQS queue "+queueName+".\n");
 		CreateQueueRequest createQueueRequest = new CreateQueueRequest(queueName);

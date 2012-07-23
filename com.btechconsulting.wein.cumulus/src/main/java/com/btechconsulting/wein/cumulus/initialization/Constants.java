@@ -1,11 +1,12 @@
 package com.btechconsulting.wein.cumulus.initialization;
 
 public class Constants {
-	public static final String credentialsFile="AwsCredentials.properties";
+	public static final String credentialsFile="WebContent/WEB-INF/AwsCredentials.properties";
 	public static final Integer initialInstances=5;
 	public static final Integer idealMaxUnitsPerInstance=100; //TODO tune this
 	public static final String dispatchQueueName="dispatchQueue";
 	public static final String returnQueueName="returnQueue";
+	public static final String testDispatchQueueName="dispatchQueuetest";
 	public static final String ec2Region="ec2.us-east-1.amazonaws.com";
 	public static final String instanceType="c1.xlarge";
 	public static final String imageID="ami-8878d5e1";

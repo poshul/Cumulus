@@ -80,7 +80,7 @@ public class WorkUnitGenerator {
 		}
 		//this catches the last <10
 		if (batch.size()>0){
-			SendMessageBatchRequest request= new SendMessageBatchRequest(Initializer.getInstance().getDispatchQueue(), batch);
+			SendMessageBatchRequest request= new SendMessageBatchRequest(dispatchQueueLoc, batch);
 			//futures.add(Initializer.getInstance().getSqsClient().sendMessageBatchAsync(request));
 			Initializer.getInstance().getSqsClient().sendMessageBatch(request);
 			System.out.println("batch sent");
@@ -153,11 +153,11 @@ public class WorkUnitGenerator {
 	}
 
 	//this is largely for testing, it allows the sending of an individual workUnit to the server
-	public static void PutWorkUnitOnServer(WorkUnit workUnit) throws AmazonServiceException, InternalError, AmazonClientException, FileNotFoundException, JAXBException, IOException{
+	public static void PutWorkUnitOnServer(WorkUnit workUnit, String dispatchQueueLoc) throws AmazonServiceException, InternalError, AmazonClientException, FileNotFoundException, JAXBException, IOException{
 		List<SendMessageBatchRequestEntry> batch=new ArrayList<SendMessageBatchRequestEntry>();
 		SendMessageBatchRequestEntry entry= putWorkUnitInSQSBatch(workUnit);
 		batch.add(entry);
-		SendMessageBatchRequest batchRequest= new SendMessageBatchRequest(Initializer.getInstance().getDispatchQueue(), batch);
+		SendMessageBatchRequest batchRequest= new SendMessageBatchRequest(dispatchQueueLoc, batch);
 		Initializer.getInstance().getSqsClient().sendMessageBatch(batchRequest);
 	}
 

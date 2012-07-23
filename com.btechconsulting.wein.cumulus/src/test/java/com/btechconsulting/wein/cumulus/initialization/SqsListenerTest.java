@@ -52,12 +52,17 @@ public class SqsListenerTest {
 		//put the work unit in the sqs and the unitsOnServer map
 		work.put(testWorkunitID, Initializer.wUStatus.INFLIGHT);
 		Initializer.getInstance(null).putJobOnServer(testUID, testjobID, work);
+		String queue;
 		try {
 			marshaller.marshal(testUnit,writer);
 			String marshalledReturn= writer.toString();
-			SendMessageRequest request = new SendMessageRequest(Initializer.getInstance(null).getReturnQueue(),marshalledReturn);
+			queue = Initializer.getInstance(null).createQueue(Initializer.getInstance(null).getSqsClient(), Constants.testDispatchQueueName);
+			SendMessageRequest request = new SendMessageRequest(queue,marshalledReturn);//TODO Change queue loc
 			sqsClient.sendMessage(request);
 		} catch (JAXBException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		try {
