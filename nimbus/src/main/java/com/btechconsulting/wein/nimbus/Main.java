@@ -148,35 +148,20 @@ public class Main {
 
 		String dispatchQueue=null;
 		String returnQueue=null;
-		if (ONCLOUD){ //if we are in maven and on the cloud or if we aren't on maven and are on the cloud
-			logger.debug("On cloud");
-			Map<String,String> queues= new HashMap<String, String>(); 
-/*			try {
-*/				//queues = GetQueueName.GetQueues(GetQueueName.GetInstanceID(INSTANCEIDLOC), credentials);
-				queues = loadQueueName(stmt);
-/*			} catch (IOException e) {
-				logger.error("Error reading credentials file");
-				e.printStackTrace();
-				System.exit(1);
-			} catch (IllegalStateException e) {
-				logger.error("Internal Error");
-				e.printStackTrace();
-				System.exit(1);
-			}*/
-			dispatchQueue= queues.get("dispatch");
-			returnQueue= queues.get("return");
-			if (dispatchQueue==null|| returnQueue==null){
-				logger.error("Couldn't get queue names");
-				logger.warn("Falling back to hardcoded queuenames");
-				dispatchQueue= "https://queue.amazonaws.com/157399895577/dispatchQueue";
-				returnQueue= "https://queue.amazonaws.com/157399895577/returnQueue";
-			}
 
-		} else{ //If we are not running from an ec2 instance take static queue names
-			logger.warn("Off cloud");
+		//load the queue names from the database
+		Map<String,String> queues= new HashMap<String, String>(); 
+		queues = loadQueueName(stmt);
+		dispatchQueue= queues.get("dispatch");
+		returnQueue= queues.get("return");
+		
+		if (dispatchQueue==null|| returnQueue==null){
+			logger.error("Couldn't get queue names");
+			logger.warn("Falling back to hardcoded queuenames");
 			dispatchQueue= "https://queue.amazonaws.com/157399895577/dispatchQueue";
 			returnQueue= "https://queue.amazonaws.com/157399895577/returnQueue";
 		}
+
 		//Get SQS client.
 		AmazonSQSClient client = new AmazonSQSClient(credentials);
 
@@ -634,11 +619,17 @@ public class Main {
 		String returnQuery="SELECT mvalue FROM cumulus.metadata WHERE mkey='return';";
 		try{
 			ResultSet results= stmt.executeQuery(dispatchQuery);
+			results.next(); //move the cursor into the results
 			returnMap.put("dispatch", results.getString(1)); //Put the result for the queue name in the map
+			logger.info("dispatch queue is:"+returnMap.get("dispatch"));
 			results = stmt.executeQuery(returnQuery);
+			results.next(); //move the cursor into the results
 			returnMap.put("return", results.getString(1)); //Put the result for the queue name in the map
+			logger.info("return queue is:"+returnMap.get("return"));
+
 		}
 		catch (SQLException e) {
+			e.printStackTrace();
 			logger.error("Couldn't connect to database");
 		}
 		return returnMap;
