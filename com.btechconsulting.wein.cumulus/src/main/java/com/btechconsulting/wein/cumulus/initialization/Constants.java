@@ -9,7 +9,7 @@ public class Constants {
 	public static final String testDispatchQueueName="dispatchQueuetest";
 	public static final String ec2Region="ec2.us-east-1.amazonaws.com";
 	public static final String instanceType="c1.xlarge";
-	public static final String imageID="ami-8878d5e1";
+	public static final String imageID="ami-93ec47fa";
 	public static final String securityGroupID="ssh";
 	public static final String keyName="Samkeys";
 	public static final String spotPrice=".25";
