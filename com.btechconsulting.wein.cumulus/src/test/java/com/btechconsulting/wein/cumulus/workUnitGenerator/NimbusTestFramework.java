@@ -37,7 +37,7 @@ public class NimbusTestFramework {
 		DetermineWorkToDo worktodo= new DetermineWorkToDo(getReceptor(), "0", filter);
 		String pointerToReceptor = worktodo.PutReceptorInDatabase();
 		WorkUnit myWorkunit= WorkUnitGenerator.BuildWorkUnit(pointerToReceptor, "ZINC00003575", "0", 0, 0, BuildVinaParams());
-		WorkUnitGenerator.PutWorkUnitOnServer(myWorkunit,Initializer.getInstance(null).getDispatchQueue());
+		WorkUnitGenerator.PutWorkUnitOnServer(myWorkunit, Initializer.getInstance(null).getDispatchQueue());
 		System.out.println("ready for nimbus");
 		//read in the receptor
 

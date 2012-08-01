@@ -258,45 +258,12 @@ public class Initializer {
 		}
 	}
 
-	/*@deprecated
-	 * this is to be replaced with the more versatile createInstances
-	 */
-	@Deprecated
-	private void createInitialInstances() throws Exception {
-		AmazonEC2 ec2= new AmazonEC2Client(this.credentials);
-		//set the zone
-		ec2.setEndpoint(Constants.ec2Region);
-		System.out.println("Intializing "+Constants.initialInstances+" instances\n");
-		//create EC2 instances
-		RunInstancesRequest runInstancesRequest = new RunInstancesRequest()
-		.withInstanceType(Constants.instanceType)
-		.withImageId(Constants.imageID)
-		.withMinCount(Constants.initialInstances)
-		.withMaxCount(Constants.initialInstances)
-		.withSecurityGroupIds(Constants.securityGroupID)
-		.withKeyName(Constants.keyName);
-
-		RunInstancesResult runInstances = ec2.runInstances(runInstancesRequest);
-		System.out.println(runInstances.toString());
-
-		//tag the instances with the dispatch and return queues
-		List<Instance> instances = runInstances.getReservation().getInstances();
-		for (Instance instance : instances) {
-			CreateTagsRequest createTagsRequest = new CreateTagsRequest();
-			createTagsRequest.withResources(instance.getInstanceId()) //
-			.withTags(new Tag("dispatch", this.dispatchQueue))
-			.withTags(new Tag("return", this.returnQueue));
-			ec2.createTags(createTagsRequest);
-		}
-	}
-
-
 	/*
 	 * @param ec2: an ec2 client
 	 * @param instancesIn: the number of instances to create
 	 * This creates a spot request for the specified number of instances of nimbus
 	 */
-	void createSpotInstances(AmazonEC2Client ec2, Integer instancesIn) throws Exception{
+	void createSpotInstances(AmazonEC2Client ec2, Integer instancesIn, String imageID) throws Exception{
 		//set the zone
 		ec2.setEndpoint(Constants.ec2Region);
 		System.out.println("Intializing "+instancesIn+" instances\n");
@@ -305,7 +272,7 @@ public class Initializer {
 		.withSpotPrice(Constants.spotPrice)
 		.withLaunchSpecification(
 				new LaunchSpecification()
-				.withImageId(Constants.imageID)
+				.withImageId(imageID)
 				.withSecurityGroups(Constants.securityGroupID)
 				.withKeyName(Constants.keyName)
 				.withInstanceType(Constants.instanceType))
@@ -321,7 +288,7 @@ public class Initializer {
 	 * @param instancesIn: the number of instances to create
 	 * This creates a specified number of instances of nimbus
 	 */
-	void createInstances(AmazonEC2Client ec2, Integer instancesIn) throws Exception {
+	void createInstances(AmazonEC2Client ec2, Integer instancesIn, String imageID) throws Exception {
 
 		//set the zone
 		ec2.setEndpoint(Constants.ec2Region);
@@ -329,7 +296,7 @@ public class Initializer {
 		//create EC2 instances
 		RunInstancesRequest runInstancesRequest = new RunInstancesRequest()
 		.withInstanceType(Constants.instanceType)
-		.withImageId(Constants.imageID)
+		.withImageId(imageID)
 		.withMinCount(1)
 		.withMaxCount(instancesIn)
 		.withSecurityGroupIds(Constants.securityGroupID)

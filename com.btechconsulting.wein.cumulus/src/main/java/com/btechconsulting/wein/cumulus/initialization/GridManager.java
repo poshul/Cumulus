@@ -1,5 +1,9 @@
 package com.btechconsulting.wein.cumulus.initialization;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
@@ -38,6 +42,25 @@ public class GridManager implements Runnable {
 		System.out.println("started GridManager");
 		AmazonSQSClient sqsClient =new AmazonSQSClient(papa.getCredentials());
 		AmazonEC2Client ec2Client =new AmazonEC2Client(papa.getCredentials());
+		
+		//Get current imageID from the metadata table
+		String imageID=Constants.imageID; //get the default imageID from Constants
+		try{
+		Connection conn= PooledConnectionFactory.INSTANCE.getCumulusConnection();
+		Statement stmt= conn.createStatement();
+		String imageQuery= "SELECT mvalue FROM cumulus.metadata WHERE mkey='imageID';";
+		ResultSet results= stmt.executeQuery(imageQuery);
+		results.next(); //move the cursor into the results
+		imageID=results.getString(1);
+		}catch (SQLException e) {
+			logger.warn(e);
+		}
+		if (imageID==null || imageID.equals("")){ //if we get an empty imageID revert to the hardcoded one
+			imageID=Constants.imageID;
+		}
+		logger.debug(imageID);
+		System.out.println(imageID);
+		
 		while (true){ //loop from startup to shutdown
 			//check the number of messages in the queue.
 			GetQueueAttributesRequest sqsRequest= new GetQueueAttributesRequest(papa.getDispatchQueue()).withAttributeNames("ApproximateNumberOfMessages");
@@ -69,7 +92,7 @@ public class GridManager implements Runnable {
 			//check the number of running instances.
 			DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest();
 			//get the number of running instances with our image ID
-			describeInstancesRequest.withFilters(new Filter("image-id").withValues(Constants.imageID),new Filter("instance-state-name").withValues("running"));
+			describeInstancesRequest.withFilters(new Filter("image-id").withValues(imageID),new Filter("instance-state-name").withValues("running"));
 			logger.debug("Getting list of active cumulus drones");
 			Integer numInstances=null;
 			Integer numSpotRequests=null;
@@ -125,8 +148,9 @@ public class GridManager implements Runnable {
 			System.out.println("num instances="+(numInstances+numSpotRequests));
 
 			// if queue is longer than the number of instances * idealMaxUnitsPerInstance
-			if(sqsResult>(numInstances+numSpotRequests)*Constants.idealMaxUnitsPerInstance){ // we count pending spot instances too.
-				Integer numToCreate= (sqsResult/Constants.idealMaxUnitsPerInstance)-numInstances+1;
+			Integer idealMaxUnitsPerInstance= Integer.valueOf(Constants.idealMaxUnitsPerInstance);
+			if(sqsResult>(numInstances+numSpotRequests)*idealMaxUnitsPerInstance){ // we count pending spot instances too.
+				Integer numToCreate= (sqsResult/idealMaxUnitsPerInstance)-numInstances+1;
 				//check current pricing of spot instances
 				DescribeSpotPriceHistoryRequest historyRequest= new DescribeSpotPriceHistoryRequest()
 				.withAvailabilityZone("us-east-1c")
@@ -138,18 +162,19 @@ public class GridManager implements Runnable {
 				//If spot price is < constants.spotPrice launch numToCreate*Constants.percentSpot spot instances
 				Integer spotToCreate=0;
 				if (nowPrice<Double.valueOf(Constants.spotPrice)){
-					spotToCreate=(int) (numToCreate*Constants.percentSpot);
-					numToCreate=(int) (numToCreate*(1-Constants.percentSpot));
+					Double percentSpot= Double.valueOf(Constants.percentSpot);
+					spotToCreate=(int) (numToCreate*percentSpot);
+					numToCreate=(int) (numToCreate*(1-percentSpot));
 				}
 				try {
 					System.out.println("regular instances: "+numToCreate);
 					System.out.println("spot instances: "+ spotToCreate);
 					//Create regular and spot instances
 					if (numToCreate>0){
-					papa.createInstances(ec2Client, numToCreate);
+					papa.createInstances(ec2Client, numToCreate, imageID);
 					}
 					if (spotToCreate>0){
-					papa.createSpotInstances(ec2Client, spotToCreate);
+					papa.createSpotInstances(ec2Client, spotToCreate, Constants.imageID);//FIXME
 					}
 					System.out.println("created instances");
 				} catch (Exception e) {
