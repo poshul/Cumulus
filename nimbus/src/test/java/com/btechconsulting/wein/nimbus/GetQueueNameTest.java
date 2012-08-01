@@ -14,7 +14,8 @@ import com.amazonaws.auth.PropertiesCredentials;
 @SuppressWarnings("unused")
 public class GetQueueNameTest {
 
-	@Test
+	//This is deprecated
+	//@Test
 	public void testGetQueues() throws FileNotFoundException, IOException {
 		PropertiesCredentials creds = new PropertiesCredentials(VinaCaller.class.getResourceAsStream(Constants.CREDENTIALSFILE));
 		System.out.println(GetQueueName.GetQueues("i-36316d54", creds));//FIXME this is really brittle and should be fixed once we deploy

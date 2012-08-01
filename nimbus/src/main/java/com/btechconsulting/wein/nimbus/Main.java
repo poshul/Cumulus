@@ -113,6 +113,19 @@ public class Main {
 			ONCLOUD=Constants.ONCLOUD;
 		}
 
+
+		//Get SQL connection
+		Connection conn=null;
+		Statement stmt=null;
+		try {
+			conn = PooledConnectionFactory.INSTANCE.getCumulusConnection();
+			stmt = conn.createStatement();
+		} catch (SQLException e2) {
+			logger.error("Couldn't connect to SQL server");
+			e2.printStackTrace();
+			System.exit(1);
+		}
+
 		//Get the queue names
 		PropertiesCredentials credentials = null;
 		try {
@@ -138,9 +151,10 @@ public class Main {
 		if (ONCLOUD){ //if we are in maven and on the cloud or if we aren't on maven and are on the cloud
 			logger.debug("On cloud");
 			Map<String,String> queues= new HashMap<String, String>(); 
-			try {
-				queues = GetQueueName.GetQueues(GetQueueName.GetInstanceID(INSTANCEIDLOC), credentials);
-			} catch (IOException e) {
+/*			try {
+*/				//queues = GetQueueName.GetQueues(GetQueueName.GetInstanceID(INSTANCEIDLOC), credentials);
+				queues = loadQueueName(stmt);
+/*			} catch (IOException e) {
 				logger.error("Error reading credentials file");
 				e.printStackTrace();
 				System.exit(1);
@@ -148,7 +162,7 @@ public class Main {
 				logger.error("Internal Error");
 				e.printStackTrace();
 				System.exit(1);
-			}
+			}*/
 			dispatchQueue= queues.get("dispatch");
 			returnQueue= queues.get("return");
 			if (dispatchQueue==null|| returnQueue==null){
@@ -166,17 +180,6 @@ public class Main {
 		//Get SQS client.
 		AmazonSQSClient client = new AmazonSQSClient(credentials);
 
-		//Get SQL connection
-		Connection conn=null;
-		Statement stmt=null;
-		try {
-			conn = PooledConnectionFactory.INSTANCE.getCumulusConnection();
-			stmt = conn.createStatement();
-		} catch (SQLException e2) {
-			logger.error("Couldn't connect to SQL server");
-			e2.printStackTrace();
-			System.exit(1);
-		}
 
 
 		//Start loop here
@@ -513,7 +516,7 @@ public class Main {
 
 							} catch (SQLException | InterruptedException e3) { //retry once in case the SQL error was intermittant
 								if (e3.equals(SQLException.class)){
-								logger.error("Couldn't put results into SQL on second try");//TODO deal with duplicate key problems
+									logger.error("Couldn't put results into SQL on second try");//TODO deal with duplicate key problems
 								}else{
 									logger.error("Interrupted");//TODO deal with duplicate key problems
 								}
@@ -618,6 +621,27 @@ public class Main {
 	private static void DeleteMessageFromDispatchQueue(AmazonSQSClient client, String dispatchQueue, String receiptHandle){
 		DeleteMessageRequest request = new DeleteMessageRequest(dispatchQueue, receiptHandle);
 		client.deleteMessage(request);
+	}
+
+	/**
+	 * This function loads the queue names from the metadata table on the database
+	 * @param stmt a statement opened to the database
+	 * @return the dispatch and return queues
+	 */
+	private static Map<String,String> loadQueueName(Statement stmt){
+		Map<String, String> returnMap= new HashMap<String, String>();
+		String dispatchQuery= "SELECT mvalue FROM cumulus.metadata WHERE mkey='dispatch';";
+		String returnQuery="SELECT mvalue FROM cumulus.metadata WHERE mkey='return';";
+		try{
+			ResultSet results= stmt.executeQuery(dispatchQuery);
+			returnMap.put("dispatch", results.getString(1)); //Put the result for the queue name in the map
+			results = stmt.executeQuery(returnQuery);
+			returnMap.put("return", results.getString(1)); //Put the result for the queue name in the map
+		}
+		catch (SQLException e) {
+			logger.error("Couldn't connect to database");
+		}
+		return returnMap;
 	}
 
 }
