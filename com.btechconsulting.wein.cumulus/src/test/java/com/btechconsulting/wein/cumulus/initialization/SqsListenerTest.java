@@ -22,7 +22,7 @@ public class SqsListenerTest {
 	}*/
 
 	//@Test  //TODO fix test
-	public void threadTest() {
+/*	public void threadTest() {
 		//sleep until we can recreate the queue
 		try {
 			Thread.sleep(60000);
@@ -73,7 +73,7 @@ public class SqsListenerTest {
 		}
 		assertEquals(Initializer.wUStatus.DONE,Initializer.getInstance(null).getStatusOfWorkUnit(testUID, testjobID, testWorkunitID));
 	}
-	//delete the unit from the queue
+*/	//delete the unit from the queue
 
 	//@After
 /*	public void tearDown() throws Exception{

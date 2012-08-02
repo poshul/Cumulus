@@ -73,10 +73,11 @@ public class Initializer {
 	private AmazonSQS sqsClient;
 	private Marshaller workUnitMarshaller;
 	private PropertiesCredentials credentials;
-	private Thread sqsListener;
+//	private Thread sqsListener;
 	private Thread gridManager;
 	private Boolean shuttingDown=false;
 	private final Logger logger= Logger.getLogger(Initializer.class);
+	private Statement stmt = null;
 	// units on server is a map of OwnerID to a map of JobID to a map of WorkUnitID to work Unit status
 	// TODO figure out how to get unit testing to work when this is private
 	Map<String, Map<Integer, Map<Integer,wUStatus>>> unitsOnServer;
@@ -95,7 +96,7 @@ public class Initializer {
 	@Deprecated
 	public static Initializer getInstance(){
 		if (instance==null){
-			instance= new Initializer(null);
+			instance= new Initializer(null,Constants.DUMPFILELOC);
 			System.err.println("warning, using deprecated version of Initializer");
 		}
 		return instance;
@@ -105,7 +106,10 @@ public class Initializer {
 	 * Overloaded version of the initializer that reads in a dumped set of unitsOnServer and restarts server 
 	 */
 	private Initializer(ServletContext servletContext, String dumpFileLoc){
+		
+		
 		try{
+			stmt =PooledConnectionFactory.INSTANCE.getCumulusConnection().createStatement();
 			readCredentials(servletContext);
 			JAXBContext context = JAXBContext.newInstance(WorkUnit.class);
 			workUnitMarshaller = context.createMarshaller();
@@ -135,9 +139,9 @@ public class Initializer {
 			// TODO: handle exception
 		}
 		//start the SQSListener
-		sqsListener = new Thread(new SqsListener(this));
+/*		sqsListener = new Thread(new SqsListener(this));
 		sqsListener.setName("sqsListener");
-		sqsListener.start();		
+		sqsListener.start();	*/	
 		//start the gridManager
 		gridManager = new Thread(new GridManager(this));
 		gridManager.setName("gridManager");
@@ -211,9 +215,9 @@ public class Initializer {
 		}
 
 		//start the SQSListener
-		sqsListener = new Thread(new SqsListener(this));
+/*		sqsListener = new Thread(new SqsListener(this));
 		sqsListener.setName("sqsListener");
-		sqsListener.start();		
+		sqsListener.start();		*/
 		//start the gridManager
 		gridManager = new Thread(new GridManager(this));
 		gridManager.setName("gridManager");
@@ -342,7 +346,7 @@ public class Initializer {
 	 */
 	public void nonDestructiveShutdown(){
 		this.shuttingDown=true;
-		this.sqsListener.interrupt();
+		//this.sqsListener.interrupt();
 		this.gridManager.interrupt();
 		serialize(Constants.DUMPFILELOC, unitsOnServer);
 		System.out.println("Closed threads and saved server state");
@@ -354,7 +358,7 @@ public class Initializer {
 	 */
 	public void teardownAll(){
 		this.shuttingDown=true;
-		this.sqsListener.interrupt();
+		//this.sqsListener.interrupt();
 		this.gridManager.interrupt();
 		sqsClient.deleteQueue(new DeleteQueueRequest(dispatchQueue));
 		sqsClient.deleteQueue(new DeleteQueueRequest(returnQueue));
@@ -473,14 +477,14 @@ public class Initializer {
 	 * @param jobID the ID of the job to add to the server
 	 * @param workUnits A map of workunits to add to the server
 	 */
-	public synchronized void putJobOnServer(
+/*	public synchronized void putJobOnServer(
 			String userID, Integer jobID, Map<Integer, wUStatus> workUnits ){
 		//If this user doesn't have any existing jobs, create the user
 		if (this.unitsOnServer.get(userID)==null){
 			this.unitsOnServer.put(userID,new HashMap<Integer, Map<Integer, wUStatus>>());
 		}
 		this.unitsOnServer.get(userID).put(jobID, workUnits);
-	}
+	}*/
 	/**
 	 * removeJobFromServer: remove a complete job from the server
 	 * @param userID the user ID of the end user removing the job
@@ -488,7 +492,15 @@ public class Initializer {
 	 */
 	public synchronized void removeJobFromServer(
 			String userID, Integer jobID){
-		this.unitsOnServer.get(userID).remove(jobID);
+		try {
+			Integer num =stmt.executeUpdate("DELETE FROM cumulus.results WHERE job_id="+jobID+" and owner_id='"+userID+"';");
+			logger.debug(num+"workunits deleted");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		//this.unitsOnServer.get(userID).remove(jobID);//TODO REMOVE ME
 	}
 
 	/**
@@ -501,7 +513,15 @@ public class Initializer {
 
 	public synchronized void putWorkUnit(
 			String userID, Integer jobID, Integer workUnitID, wUStatus newStatus){
-		this.unitsOnServer.get(userID).get(jobID).put(workUnitID, newStatus);
+		try {
+			Integer num =stmt.executeUpdate("REPLACE INTO cumulus.results (owner_id,job_id,workunit_id,status) VALUES('"+userID+"',"+jobID+","+workUnitID+",'"+newStatus.toString()+"');");
+			logger.debug(num+"workunits added");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		//this.unitsOnServer.get(userID).get(jobID).put(workUnitID, newStatus); //TODO remove me
 		//FIXME nullpointerexception is generated when SQS state doesn't match internal state.
 	}
 
@@ -514,7 +534,26 @@ public class Initializer {
 	 */
 	public synchronized wUStatus getStatusOfWorkUnit(
 			String userID, Integer jobID, Integer workUnitID){
-		return this.unitsOnServer.get(userID).get(jobID).get(workUnitID);
+		wUStatus status= null;
+		try {
+			ResultSet results=stmt.executeQuery("SELECT status FROM cumulus.results WHERE owner_id='"+userID+"' and job_id="+jobID+" and workunit_id="+workUnitID+";");
+			results.next(); // move into the first row
+			status=wUStatus.valueOf(results.getString(1));// convert the result to a wUstatus
+			if (results.next()){//if we have more than one result something went wrong
+				throw new SQLException("There was a collision in results");
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			System.out.println(e);
+			e.printStackTrace();
+		}
+		if (status!=null){
+		return status;
+		}
+		else{
+			return wUStatus.ERROR;//if we didn't get a status we assume that there has been an error
+		}
+		//return this.unitsOnServer.get(userID).get(jobID).get(workUnitID); //TODO REMOVE ME
 	}
 
 	/**
@@ -529,7 +568,6 @@ public class Initializer {
 		Integer maxId2=0;
 		String query="SELECT max(job_id) FROM cumulus.results WHERE cumulus.results.owner_id=\""+userID+"\";";
 		try {
-			Statement stmt = PooledConnectionFactory.INSTANCE.getCumulusConnection().createStatement();
 			ResultSet results= stmt.executeQuery(query);
 			if (results.next()){
 				//if the receptor is not in the database (with the right ownership)
@@ -539,7 +577,8 @@ public class Initializer {
 			logger.error(e);
 			e.printStackTrace();
 		}
-		logger.warn("couldn't find jobs in database checking against jobs on server");
+		return maxId;
+/*		logger.warn("couldn't find jobs in database checking against jobs on server");
 		if(this.unitsOnServer.get(userID)!=null&& this.unitsOnServer.get(userID).keySet().size()>0){
 			maxId2= Collections.max(this.unitsOnServer.get(userID).keySet());
 		}else{
@@ -549,23 +588,23 @@ public class Initializer {
 			return maxId2;
 		}else{
 			return maxId;
-		}
+		}*/
 	}
 
 	public synchronized Integer getNumberOfWorkUnitsInFlight(String userID, Integer jobID) throws IllegalStateException{
-		try{
-			Map<Integer,wUStatus> job= this.unitsOnServer.get(userID).get(jobID);
-			Integer numInFlight=0;
-			for (Integer i : job.keySet()) {
-				if (job.get(i).equals(wUStatus.INFLIGHT)){
-					numInFlight++;
-				}
+		Integer number=null;
+		try {
+			ResultSet results =stmt.executeQuery("SELECT count(*) FROM cumulus.results WHERE status='"+wUStatus.INFLIGHT.toString()+"' and owner_id='"+userID+"' and job_id='"+jobID+"';");
+			results.next(); // move into the first row
+			number=results.getInt(1);// convert the result to a wUstatus
+			if (results.next()){//if we have more than one result something went wrong
+				throw new SQLException("There was a collision in results");
 			}
-			return numInFlight;
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		catch(NullPointerException npe){
-			throw (new IllegalStateException("specified job and/or user does not exist"));
-		}
+		return number;
 	}
 
 	/**

@@ -54,7 +54,7 @@ public class WorkUnitGenerator {
 		//find the new JobID
 		Integer jobID= Initializer.getInstance(null).getMaxJobID(ownerID)+1;//our jobID is the NEXT integer
 		//put an empty job on the server
-		Initializer.getInstance(null).putJobOnServer(ownerID, jobID, new HashMap<Integer,wUStatus>());
+		//Initializer.getInstance(null).putJobOnServer(ownerID, jobID, new HashMap<Integer,wUStatus>());//TODO REMOVE ME
 		DetermineWorkToDo jobWork= new DetermineWorkToDo(receptor, ownerID, filterParams);
 		String receptorID=jobWork.PutReceptorInDatabase();
 		List<String> compoundIDs=jobWork.FilterCompoundsInDatabase();
