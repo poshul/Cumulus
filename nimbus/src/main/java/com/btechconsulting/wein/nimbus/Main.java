@@ -147,20 +147,20 @@ public class Main {
 		}
 
 		String dispatchQueue=null;
-		String returnQueue=null;
+		//String returnQueue=null;
 
 		//load the queue names from the database
 		Map<String,String> queues= new HashMap<String, String>(); 
 		queues = loadQueueName(stmt);
 		dispatchQueue= queues.get("dispatch");
-		returnQueue= queues.get("return");
+		//returnQueue= queues.get("return");
 		
-		if (dispatchQueue==null|| returnQueue==null){
+/*		if (dispatchQueue==null|| returnQueue==null){
 			logger.error("Couldn't get queue names");
 			logger.warn("Falling back to hardcoded queuenames");
 			dispatchQueue= "https://queue.amazonaws.com/157399895577/dispatchQueue";
 			returnQueue= "https://queue.amazonaws.com/157399895577/returnQueue";
-		}
+		}*/
 
 		//Get SQS client.
 		AmazonSQSClient client = new AmazonSQSClient(credentials);
@@ -229,7 +229,7 @@ public class Main {
 
 
 				//Check to make sure that we haven't already done this calculation;
-				String queryStatement="SELECT count(*) FROM cumulus.results WHERE owner_id='"+unMarshalledUnit.getOwnerID()+"' and job_id='"+unMarshalledUnit.getJobID()+"' and workunit_id='"+unMarshalledUnit.getWorkUnitID()+"';";
+				String queryStatement="SELECT count(*) FROM cumulus.results WHERE owner_id='"+unMarshalledUnit.getOwnerID()+"' and job_id='"+unMarshalledUnit.getJobID()+"' and workunit_id='"+unMarshalledUnit.getWorkUnitID()+"' and results is not NULL;";
 				Integer numResults=null;
 
 				ResultSet duplicateResults;
@@ -273,7 +273,7 @@ public class Main {
 							logger.warn("Molecule pdbqt was null");
 							returnU.setStatus("ERROR");
 							try {
-								SendStatusToReturnQueue(client, returnQueue, returnU);
+								sendStatusToDB(returnU, null, stmt);
 								DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
 							} catch (JAXBException e1) {
 								e1.printStackTrace();
@@ -291,7 +291,7 @@ public class Main {
 							logger.error("Couldn't find either molecule or receptor");
 							returnU.setStatus("ERROR");
 							try {
-								SendStatusToReturnQueue(client, returnQueue, returnU);
+								sendStatusToDB(returnU, null, stmt);
 								DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
 							} catch (JAXBException e1) {
 								e1.printStackTrace();
@@ -305,7 +305,7 @@ public class Main {
 							logger.error("We had a collision in receptor results");
 							returnU.setStatus("ERROR");
 							try {
-								SendStatusToReturnQueue(client, returnQueue, returnU);
+								sendStatusToDB(returnU, null, stmt);
 								DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
 							} catch (JAXBException e1) {
 								e1.printStackTrace();
@@ -319,7 +319,7 @@ public class Main {
 							logger.error("We had a collision in molecule results");
 							returnU.setStatus("ERROR");
 							try {
-								SendStatusToReturnQueue(client, returnQueue, returnU);
+								sendStatusToDB(returnU, null, stmt);
 								DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
 							} catch (JAXBException e1) {
 								e1.printStackTrace();
@@ -334,7 +334,7 @@ public class Main {
 						logger.error(e2);
 						returnU.setStatus("ERROR");
 						try {
-							SendStatusToReturnQueue(client, returnQueue, returnU);
+							sendStatusToDB(returnU, null, stmt);
 							DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
 						} catch (JAXBException e1) {
 							e1.printStackTrace();
@@ -362,7 +362,7 @@ public class Main {
 						logger.error("Error creating file");
 						returnU.setStatus("ERROR");
 						try {
-							SendStatusToReturnQueue(client, returnQueue, returnU);
+							sendStatusToDB(returnU, null, stmt);
 							DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
 						} catch (JAXBException e1) {
 							e1.printStackTrace();
@@ -411,7 +411,7 @@ public class Main {
 							executor.shutdownNow(); // kill ALL the things!
 							returnU.setStatus("ERROR");
 							try {
-								SendStatusToReturnQueue(client, returnQueue, returnU);
+								sendStatusToDB(returnU, null, stmt);
 							} catch (JAXBException e) {
 								e.printStackTrace();
 								logger.error("Problem marshalling return unit");
@@ -433,7 +433,7 @@ public class Main {
 							//try to tell the return queue that we have an error
 							returnU.setStatus("ERROR");
 							try {
-								SendStatusToReturnQueue(client, returnQueue, returnU);
+								sendStatusToDB(returnU, null, stmt);
 								DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
 							} catch (JAXBException e1) {
 								e1.printStackTrace();
@@ -460,7 +460,7 @@ public class Main {
 						} catch (FileNotFoundException e1) {
 							returnU.setStatus("ERROR");
 							try {
-								SendStatusToReturnQueue(client, returnQueue, returnU);
+								sendStatusToDB(returnU, null, stmt);
 								DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
 							} catch (JAXBException e2) {
 								e2.printStackTrace();
@@ -471,7 +471,7 @@ public class Main {
 						} catch (IOException ioe) {
 							returnU.setStatus("ERROR");
 							try {
-								SendStatusToReturnQueue(client, returnQueue, returnU);
+								sendStatusToDB(returnU, null, stmt);
 								DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
 							} catch (JAXBException e1) {
 								e1.printStackTrace();
@@ -488,7 +488,7 @@ public class Main {
 						results=DatatypeConverter.printBase64Binary(results.getBytes());
 
 						//put results into sql
-						String resultsStatement="INSERT INTO cumulus.results (owner_id, job_id, workunit_id, results) VALUE('"+unMarshalledUnit.getOwnerID()+"','"+unMarshalledUnit.getJobID()+"','"+unMarshalledUnit.getWorkUnitID()+"','"+results+"');";
+/*						String resultsStatement="REPLACE INTO cumulus.results (owner_id, job_id, workunit_id, results) VALUE('"+unMarshalledUnit.getOwnerID()+"','"+unMarshalledUnit.getJobID()+"','"+unMarshalledUnit.getWorkUnitID()+"','"+results+"');";
 						logger.debug(resultsStatement);
 						try {
 							stmt.executeUpdate(resultsStatement);
@@ -508,7 +508,7 @@ public class Main {
 								e1.printStackTrace();
 								returnU.setStatus("ERROR");
 								try {
-									SendStatusToReturnQueue(client, returnQueue, returnU);
+									sendStatusToDB(returnU, null);
 									DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
 								} catch (JAXBException e2) {
 									e2.printStackTrace();
@@ -517,12 +517,12 @@ public class Main {
 								}
 								System.exit(1);
 							}
-						}
+						}*/
 
 						//put results in return queue
 						returnU.setStatus("DONE");
 						try {
-							SendStatusToReturnQueue(client, returnQueue, returnU);
+							sendStatusToDB(returnU, results, stmt);
 						} catch (JAXBException jbe) {
 							jbe.printStackTrace();
 							logger.error("Problem marshalling return unit");
@@ -533,14 +533,14 @@ public class Main {
 					}
 				}else{ //this can happen with SQS so we need to accept duplicate processing, in this case we trust the earlier computation
 					logger.warn("Result is already in database");
-					returnU.setStatus("DONE");
+/*					returnU.setStatus("DONE");
 					try {
-						SendStatusToReturnQueue(client, returnQueue, returnU);
+						sendStatusToDB(returnU, nul);
 					} catch (JAXBException jbe) {
 						jbe.printStackTrace();
 						logger.error("Problem marshalling return unit");
 						System.exit(1);
-					}
+					}*/
 					//delete workunit from dispatch queue
 					DeleteMessageFromDispatchQueue(client, dispatchQueue, receiptHandle);
 				}
@@ -597,10 +597,14 @@ public class Main {
 		return writer.toString();
 	}
 
-	private static void SendStatusToReturnQueue(AmazonSQSClient client,String returnQueue, ReturnUnit returnUnit) throws JAXBException{
-		String marshalledReturnUnit = MarshallReturnUnit(returnUnit);
-		SendMessageRequest request = new SendMessageRequest(returnQueue, marshalledReturnUnit);
-		client.sendMessage(request);
+	//
+	private static void sendStatusToDB(ReturnUnit returnUnit, String results, Statement stmt) throws JAXBException{
+		try {
+			stmt.executeUpdate("REPLACE INTO cumulus.results (owner_id, job_id, workunit_id, results, status) VALUE('"+returnUnit.getOwnerID()+"','"+returnUnit.getJobID()+"','"+returnUnit.getWorkUnitID()+"','"+results+"','"+returnUnit.getStatus()+"');");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private static void DeleteMessageFromDispatchQueue(AmazonSQSClient client, String dispatchQueue, String receiptHandle){
@@ -626,7 +630,6 @@ public class Main {
 			results.next(); //move the cursor into the results
 			returnMap.put("return", results.getString(1)); //Put the result for the queue name in the map
 			logger.info("return queue is:"+returnMap.get("return"));
-
 		}
 		catch (SQLException e) {
 			e.printStackTrace();
